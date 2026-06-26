@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:porn.yush.dev)",
+      "Bash(curl -s --max-time 10 -X POST https://porn.yush.dev/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ __schema { queryType { fields { name description } } } }\"}')",
+      "Bash(curl -sv --max-time 10 -X POST http://porn.yush.dev/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ __schema { queryType { fields { name } } } }\"}')"
+    ]
+  }
+}
