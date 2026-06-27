@@ -6,9 +6,9 @@
 # Stage 2 (builder): compiles the Next.js app in standalone output mode.
 # Stage 3 (runner): minimal production image running as a non-root user.
 #
-# NEXT_PUBLIC_* vars must be supplied as build args because Next.js inlines
-# them into the client bundle at compile time. Runtime-only vars (STASH_INTERNAL_URL,
-# STASH_API_KEY) are injected when the container starts, not baked in here.
+# NEXT_PUBLIC_* vars are baked in as placeholder strings at build time; entrypoint.sh
+# replaces them with real values at container startup so the image is reusable.
+# Runtime-only vars (STASH_INTERNAL_URL, STASH_API_KEY) are injected by Docker directly.
 # =============================================================================
 
 # syntax=docker/dockerfile:1
@@ -25,8 +25,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG NEXT_PUBLIC_STASH_EXTERNAL_URL=http://localhost:9999
-ARG NEXT_PUBLIC_PAGE_SIZE=60
+# Placeholder values are baked into the bundle at compile time.
+# The entrypoint.sh script replaces them with real env var values at container startup,
+# so a single pre-built image works for any deployment target without a rebuild.
+ARG NEXT_PUBLIC_STASH_EXTERNAL_URL=__NEXT_PUBLIC_STASH_EXTERNAL_URL__
+ARG NEXT_PUBLIC_PAGE_SIZE=__NEXT_PUBLIC_PAGE_SIZE__
 
 ENV NEXT_PUBLIC_STASH_EXTERNAL_URL=$NEXT_PUBLIC_STASH_EXTERNAL_URL \
     NEXT_PUBLIC_PAGE_SIZE=$NEXT_PUBLIC_PAGE_SIZE \
@@ -55,8 +58,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
+# entrypoint.sh replaces placeholder env vars in the bundle at container startup.
+COPY --chown=nextjs:nodejs docker/entrypoint.sh ./entrypoint.sh
+RUN chmod +x entrypoint.sh
+
 USER nextjs
 
 EXPOSE 7676
 
-CMD ["node", "server.js"]
+CMD ["sh", "entrypoint.sh"]
