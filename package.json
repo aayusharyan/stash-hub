@@ -4,9 +4,9 @@
   "private": true,
   "description": "Polished Next.js frontend for self-hosted Stash - browse scenes, performers, studios, and your full personal collection from a clean, modern dashboard.",
   "scripts": {
-    "dev": "next dev -H 0.0.0.0",
+    "dev": "next dev -H 0.0.0.0 -p 7676",
     "build": "next build",
-    "start": "next start"
+    "start": "next start -p 7676"
   },
   "dependencies": {
     "@apollo/client": "^4.2.3",
