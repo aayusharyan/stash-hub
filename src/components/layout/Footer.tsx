@@ -1,6 +1,6 @@
-// Renders the global site footer shown at the bottom of every page on desktop.
+// Renders the global site footer shown at the bottom of every page.
 // Three-column layout: Open Stash link (left), site name (center), GitHub star link (right).
-// Footer background spans full viewport width; Container constrains the inner content.
+// On mobile, pb-14 ensures content clears the fixed MobileNav (56px tall).
 
 import { ExternalLink, Star } from "lucide-react";
 import { Container } from "@/components/ui/Container";
@@ -8,7 +8,7 @@ import { Container } from "@/components/ui/Container";
 export function Footer() {
   return (
     <footer
-      className="hidden md:block"
+      className="pb-14 md:pb-0"
       style={{ borderTop: "1px solid var(--border-color)" }}
     >
       <Container>
