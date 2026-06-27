@@ -1,0 +1,33 @@
+# =============================================================================
+# @file docker-compose.yml
+# @description End-user Docker Compose for running the pre-built image from GHCR.
+#
+# Uses the published image - no local build required. All you need is Docker.
+# All env vars are injected at container startup; the entrypoint script patches
+# the NEXT_PUBLIC_* placeholders into the compiled bundle before the server starts.
+#
+# Usage: docker compose -f docker/docker-compose.yml up -d
+# Access: http://localhost:7676
+# =============================================================================
+
+services:
+  stash-hub:
+    image: ghcr.io/aayusharyan/stash-hub:latest
+    container_name: stash-hub
+    ports:
+      - "${STASH_HUB_PORT:-7676}:7676"
+    environment:
+      # Server-side proxy vars - never exposed to the browser.
+      STASH_INTERNAL_URL: ${STASH_INTERNAL_URL:-http://localhost:9999}
+      STASH_API_KEY: ${STASH_API_KEY:-}
+      # Client-visible vars - injected into the bundle by entrypoint.sh at startup.
+      # Set NEXT_PUBLIC_STASH_EXTERNAL_URL to the URL your browser uses to reach Stash.
+      NEXT_PUBLIC_STASH_EXTERNAL_URL: ${NEXT_PUBLIC_STASH_EXTERNAL_URL:-http://localhost:9999}
+      NEXT_PUBLIC_PAGE_SIZE: ${NEXT_PUBLIC_PAGE_SIZE:-60}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:7676/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
