@@ -45,7 +45,7 @@ LABEL version="0.1.0"
 
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
-    PORT=3000 \
+    PORT=7676 \
     HOSTNAME=0.0.0.0
 
 RUN addgroup --system --gid 1001 nodejs \
@@ -57,6 +57,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 7676
 
 CMD ["node", "server.js"]
