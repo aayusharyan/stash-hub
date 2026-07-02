@@ -29,14 +29,14 @@ If you know what Stash is, you already know exactly what this is for. If you don
 ### Docker (recommended)
 
 ```bash
-docker run -d -p 3000:3000 \
-  -e STASH_URL=http://your-stash-host:9999 \
+docker run -d -p 7676:7676 \
+  -e STASH_INTERNAL_URL=http://your-stash-host:9999 \
   -e STASH_API_KEY=your-api-key \
-  --name stashhub \
+  --name stash-hub \
   ghcr.io/aayusharyan/stash-hub:latest
 ```
 
-Access at http://localhost:3000
+Access at http://localhost:7676
 
 See [docker/README.md](docker/README.md) for more options including Docker Compose.
 
@@ -57,14 +57,14 @@ npm run dev
 
 Copy `.env.example` to `.env.local` and fill in the values:
 
-| Variable                | Description                                                           | Default                 |
-| ----------------------- | --------------------------------------------------------------------- | ----------------------- |
-| `STASH_URL`             | Your Stash instance URL - server-side only, never sent to the browser | `http://localhost:9999` |
-| `STASH_API_KEY`         | Stash API key from **Settings → Security → API Key**                  | _(empty)_               |
-| `NEXT_PUBLIC_STASH_URL` | Stash URL surfaced in the "Open Stash" header link                    | `http://localhost:9999` |
-| `NEXT_PUBLIC_PAGE_SIZE` | Items per page across all listing views                               | `60`                    |
+| Variable                         | Description                                                                                                           | Default                 |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `STASH_INTERNAL_URL`             | Your Stash instance URL - server-side only, never sent to the browser                                                 | `http://localhost:9999` |
+| `STASH_API_KEY`                  | Stash API key from **Settings → Security → API Key**                                                                  | _(empty)_               |
+| `NEXT_PUBLIC_STASH_EXTERNAL_URL` | Browser-facing Stash URL - used for the "Open Stash" footer link and edit links on scene, performer, and studio pages | `http://localhost:9999` |
+| `NEXT_PUBLIC_PAGE_SIZE`          | Items per page across all listing views                                                                               | `60`                    |
 
-`STASH_URL` and `STASH_API_KEY` are server-side proxy variables only - they are never included in the client bundle.
+`STASH_INTERNAL_URL` and `STASH_API_KEY` are server-side proxy variables only - they are never included in the client bundle.
 
 ## Architecture
 
@@ -94,7 +94,7 @@ The app ships as a Docker image built from `docker/Dockerfile` using a multi-sta
 docker compose -f docker/docker-compose.yml up -d
 ```
 
-For cloud deployments, any platform that runs Docker containers works. `NEXT_PUBLIC_*` variables must be set at **build time** (baked into the pre-built image with sensible defaults); `STASH_URL` and `STASH_API_KEY` are injected at **runtime**.
+For cloud deployments, any platform that runs Docker containers works. `NEXT_PUBLIC_*` variables must be set at **build time** (baked into the pre-built image with sensible defaults); `STASH_INTERNAL_URL` and `STASH_API_KEY` are injected at **runtime**.
 
 ## Contributing
 
