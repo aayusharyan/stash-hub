@@ -167,7 +167,7 @@ export default function PerformerPage() {
             )}
           </div>
 
-          {/* Info — name, stats, meta details, bio, tags, and social links all in one column */}
+          {/* Info - name, stats, meta details, bio, tags, and social links all in one column */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl md:text-3xl font-bold" style={{ color: "var(--text-primary)" }}>
@@ -281,7 +281,7 @@ export default function PerformerPage() {
         </div>
       </div>
 
-      {/* Scenes — full width now that the sidebar is gone */}
+      {/* Scenes - full width now that the sidebar is gone */}
       <div className="py-6">
         <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)" }}>
           Videos ({total.toLocaleString()})
