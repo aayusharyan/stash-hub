@@ -92,13 +92,18 @@ jobs:
           echo "Updated version in docker/Dockerfile:"
           grep 'LABEL version=' docker/Dockerfile
 
+      # Skips commit gracefully if files were already at the target version (no-op update)
       - name: Commit and push version bump
         run: |
           git config user.name "Aayush Sinha"
           git config user.email "hello@yush.dev"
           git add package.json docker/Dockerfile
-          git commit -m "chore: bump version to ${{ steps.version.outputs.version_number }}"
-          git push origin main
+          if git diff --cached --quiet; then
+            echo "Files already at version ${{ steps.version.outputs.version_number }}, skipping commit"
+          else
+            git commit -m "chore: bump version to ${{ steps.version.outputs.version_number }}"
+            git push origin main
+          fi
 
       - name: Create and push tag
         run: |
