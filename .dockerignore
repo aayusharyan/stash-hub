@@ -1,0 +1,21 @@
+# Build artefacts
+.next
+out
+
+# Dependencies (reinstalled inside Docker)
+node_modules
+
+# Local env - values are passed as build args instead
+.env.local
+.env.*.local
+
+# Dev/editor noise
+.git
+.github
+.vscode
+*.md
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
