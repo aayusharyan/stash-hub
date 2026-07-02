@@ -7,7 +7,7 @@ import { type NextRequest } from "next/server";
 
 export const runtime = "edge";
 
-// Maps every accent key to its hex colour — mirrors ACCENT_OPTIONS in ThemeContext.
+// Maps every accent key to its hex colour - mirrors ACCENT_OPTIONS in ThemeContext.
 const ACCENT_COLORS: Record<string, string> = {
   orange: "#ff9000",
   blue:   "#0d6efd",
