@@ -5,7 +5,7 @@
 // Preferences are persisted via ThemeContext and ViewContext respectively.
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Monitor, Sun, Moon, Check, SlidersHorizontal } from "lucide-react";
+import { Monitor, Sun, Moon, Check, Settings } from "lucide-react";
 import { useTheme, ACCENT_OPTIONS, type ThemeMode, type AccentKey } from "@/contexts/ThemeContext";
 import { useView, type GridDensity } from "@/contexts/ViewContext";
 
@@ -54,13 +54,12 @@ export function ThemeDropdown() {
   return (
     <DropdownMenu.Root modal={false}>
       <DropdownMenu.Trigger asChild>
-        {/* SlidersHorizontal communicates that this controls appearance AND layout settings */}
         <button
           aria-label="View & appearance settings"
           className="flex items-center justify-center w-8 h-8 rounded transition-colors hover:opacity-80"
           style={{ color: "var(--primary)" }}
         >
-          <SlidersHorizontal size={17} />
+          <Settings size={18} />
         </button>
       </DropdownMenu.Trigger>
 
