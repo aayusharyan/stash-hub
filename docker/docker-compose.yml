@@ -21,7 +21,8 @@ services:
       STASH_INTERNAL_URL: ${STASH_INTERNAL_URL:-http://localhost:9999}
       STASH_API_KEY: ${STASH_API_KEY:-}
       # Client-visible vars - injected into the bundle by entrypoint.sh at startup.
-      # Set NEXT_PUBLIC_STASH_EXTERNAL_URL to the URL your browser uses to reach Stash.
+      # NEXT_PUBLIC_STASH_EXTERNAL_URL is the browser-facing Stash URL: used for the
+      # "Open Stash" footer link and edit links on scene, performer, and studio pages.
       NEXT_PUBLIC_STASH_EXTERNAL_URL: ${NEXT_PUBLIC_STASH_EXTERNAL_URL:-http://localhost:9999}
       NEXT_PUBLIC_PAGE_SIZE: ${NEXT_PUBLIC_PAGE_SIZE:-60}
     restart: unless-stopped
