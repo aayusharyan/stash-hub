@@ -39,6 +39,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# public folder - no static assets are committed; place files here locally as needed
+/public
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
