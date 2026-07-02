@@ -2,10 +2,11 @@
 
 // Video player built on Vidstack. Handles HLS and plain video streams,
 // VTT thumbnail previews, custom keybindings (f=fullscreen, k/space=play,
-// j/l=seek, m=mute), and the Normal/Cinema/Fullscreen resize overlay.
+// j/l=seek, m=mute), and Normal/Cinema mode buttons injected directly into
+// the Vidstack control bar so they appear in fullscreen as well.
 
 import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
-import { Monitor, RectangleHorizontal, Maximize } from "lucide-react";
+import { Monitor, RectangleHorizontal } from "lucide-react";
 import {
   MediaPlayer,
   MediaProvider,
@@ -15,12 +16,10 @@ import {
 import { DefaultVideoLayout, defaultLayoutIcons } from "@vidstack/react/player/layouts/default";
 import type { Scene } from "@/types/stash";
 import { sceneStreamUrl, toProxyUrl } from "@/lib/utils";
-import { cn } from "@/lib/utils";
 
 export type PlayerMode = "normal" | "cinema" | "fullscreen";
 
 export interface VideoPlayerHandle {
-  requestFullscreen: () => void;
   seekTo: (seconds: number) => void;
 }
 
@@ -32,10 +31,10 @@ interface Props {
   onFirstPlay?: () => void;
 }
 
-const MODE_BUTTONS: { id: PlayerMode; icon: React.ElementType; label: string }[] = [
-  { id: "normal",     icon: Monitor,             label: "Normal view" },
-  { id: "cinema",     icon: RectangleHorizontal, label: "Cinema mode" },
-  { id: "fullscreen", icon: Maximize,            label: "Fullscreen"  },
+// Only Normal and Cinema are offered; Vidstack already provides a native fullscreen button.
+const VIEW_MODE_BUTTONS: { id: "normal" | "cinema"; icon: React.ElementType; label: string }[] = [
+  { id: "normal", icon: Monitor,             label: "Normal view" },
+  { id: "cinema", icon: RectangleHorizontal, label: "Cinema mode" },
 ];
 
 export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(function VideoPlayer(
@@ -56,11 +55,8 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(function VideoPl
     hasPlayedRef.current = false;
   }, [streamUrl]);
 
-  // Expose requestFullscreen and seekTo so the parent page can trigger them imperatively.
+  // Expose seekTo so the parent can drive seek imperatively (e.g. from scene markers).
   useImperativeHandle(ref, () => ({
-    requestFullscreen() {
-      playerRef.current?.enterFullscreen();
-    },
     seekTo(seconds: number) {
       if (playerRef.current) {
         playerRef.current.currentTime = seconds;
@@ -77,12 +73,30 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(function VideoPl
     }
   }, [onFirstPlay]);
 
+  // Normal / Cinema toggle buttons rendered inside the Vidstack control bar, placed
+  // just before the native fullscreen button so they appear even in native fullscreen.
+  const modeButtonsSlot = (
+    <div className="flex items-center">
+      {VIEW_MODE_BUTTONS.map(({ id, icon: Icon, label }) => (
+        <button
+          key={id}
+          onClick={() => onModeChange(id)}
+          title={label}
+          aria-label={label}
+          className="vds-button"
+          style={{ color: mode === id ? "var(--primary)" : undefined }}
+        >
+          <Icon data-class="vds-icon" size={20} />
+        </button>
+      ))}
+    </div>
+  );
+
   return (
-    // `group` enables the child hover utilities for the resize overlay.
-    <div className="relative w-full group" style={{ backgroundColor: "#000" }}>
+    <div className="relative w-full" style={{ backgroundColor: "#000" }}>
       <MediaPlayer
         ref={playerRef}
-        src={streamUrl}
+        src={{ src: streamUrl, type: "video/mp4" }}
         crossOrigin
         playsInline
         onPlay={handlePlay}
@@ -111,40 +125,16 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(function VideoPl
         <DefaultVideoLayout
           icons={defaultLayoutIcons}
           thumbnails={vttUrl ?? undefined}
+          slots={{
+            // Normal/Cinema mode buttons sit inside the control bar before the fullscreen button.
+            beforeFullscreenButton: modeButtonsSlot,
+            // Remove the settings gear, AirPlay and Google Cast buttons - not applicable here.
+            settingsMenu: null,
+            airPlayButton: null,
+            googleCastButton: null,
+          }}
         />
       </MediaPlayer>
-
-      {/* Resize overlay - fades in when the user hovers over the player,
-          positioned top-right like YouTube's Theater / Fullscreen buttons.
-          z-50 keeps it above Vidstack's own control bar (z-10). */}
-      <div
-        className={cn(
-          "absolute top-3 right-3 z-50 flex items-center gap-1",
-          "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
-          "pointer-events-none group-hover:pointer-events-auto"
-        )}
-      >
-        {MODE_BUTTONS.map(({ id, icon: Icon, label }) => {
-          const active = mode === id;
-          return (
-            <button
-              key={id}
-              onClick={() => onModeChange(id)}
-              title={label}
-              aria-label={label}
-              className={cn(
-                "flex items-center justify-center w-8 h-8 rounded transition-all",
-                active
-                  ? "bg-white/25"
-                  : "bg-black/50 hover:bg-black/70"
-              )}
-              style={{ color: active ? "var(--primary)" : "#fff" }}
-            >
-              <Icon size={16} />
-            </button>
-          );
-        })}
-      </div>
     </div>
   );
 });
