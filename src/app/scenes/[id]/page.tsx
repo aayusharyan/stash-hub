@@ -1,7 +1,7 @@
 "use client";
 
 // Scene detail page. Fetches full scene metadata, renders the Plyr/HLS video player,
-// interactive o_counter (like/dislike), scene markers, and a sidebar of related videos.
+// like/dislike counter, scene markers, and a sidebar of related videos.
 // Related videos primary source: same performer. Falls back to shared-tag matching when
 // fewer than MIN_RELATED scenes are found via performer. Supports Normal and Cinema layout modes.
 
@@ -82,7 +82,7 @@ export default function ScenePage() {
   // Keep the ref in sync with state so the fullscreenchange handler always reads the latest mode.
   useEffect(() => { playerModeRef.current = playerMode; }, [playerMode]);
 
-  // Local o_counter state - initialized from the query result and kept in sync after mutations.
+  // Local like-counter state - initialized from the query result and kept in sync after mutations.
   const [oCount, setOCount] = useState<number | null>(null);
 
   // Local play_count updated optimistically when the mutation fires.
@@ -352,14 +352,14 @@ export default function ScenePage() {
         )}
       </div>
 
-      {/* Like / Dislike buttons tied to the Stash o_counter field */}
+      {/* Like / Dislike buttons */}
       <div className="flex items-center gap-2 mt-3">
         <button
           onClick={() => incrementO()}
           disabled={liking || disliking}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all disabled:opacity-50"
           style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
-          title="Like (increment o)"
+          title="Like"
         >
           <ThumbsUp size={15} />
         </button>
@@ -376,7 +376,7 @@ export default function ScenePage() {
           disabled={liking || disliking || (oCount ?? scene.o_counter ?? 0) <= 0}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all disabled:opacity-50"
           style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
-          title="Dislike (decrement o)"
+          title="Dislike"
         >
           <ThumbsDown size={15} />
         </button>
