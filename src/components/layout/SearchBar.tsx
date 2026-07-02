@@ -186,7 +186,7 @@ export function SearchBar({ className = "", onClose, autoFocus }: SearchBarProps
       <form onSubmit={handleSubmit} className="flex w-full">
         {/* Unified pill-shaped search input with icons inside */}
         <div
-          className="flex items-center w-full h-9 rounded-full px-3 gap-2 transition-all duration-200"
+          className="flex items-center w-full h-9 rounded-full ps-2 pe-1 gap-2 transition-all duration-200"
           style={{
             backgroundColor: "var(--bg-secondary)",
             border: focused
