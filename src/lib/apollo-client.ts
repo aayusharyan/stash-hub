@@ -38,12 +38,12 @@ function makeClient() {
 
 // Reuse the same client instance across renders. In dev, the HMR guard below
 // replaces the instance on each reload so the old cache gets garbage-collected.
-let apolloClientInstance: ApolloClient<object>;
+let apolloClientInstance: ApolloClient;
 
 if (isDev) {
   // Attach the client to a module-scoped global so HMR can dispose the old one.
   const globalKey = "__APOLLO_CLIENT__";
-  const g = globalThis as typeof globalThis & { [globalKey]?: ApolloClient<object> };
+  const g = globalThis as typeof globalThis & { [globalKey]?: ApolloClient };
   if (!g[globalKey]) {
     g[globalKey] = makeClient();
   }
