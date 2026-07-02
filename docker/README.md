@@ -65,7 +65,7 @@ docker compose -f docker/docker-compose.yml up -d
 | `NEXT_PUBLIC_PAGE_SIZE`          | Number of items per page in listing views.                                                                          | `60`                    |
 | `STASH_HUB_PORT`                 | Host port to expose StashHub on.                                                                                    | `7676`                  |
 
-> **How `NEXT_PUBLIC_*` vars work at runtime:** The pre-built image uses placeholder strings in the compiled bundle. The container's `entrypoint.sh` replaces them with your actual env var values on every startup — no image rebuild needed.
+> **How `NEXT_PUBLIC_*` vars work at runtime:** The pre-built image uses placeholder strings in the compiled bundle. The container's `entrypoint.sh` replaces them with your actual env var values on every startup - no image rebuild needed.
 
 ## Updating
 
