@@ -1,65 +1,178 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+// Home page - shows a random unwatched discovery feed, most watched, top rated scenes,
+// popular tags, and top performers. All sections are fetched in parallel via Apollo.
+// The Discover section prioritises unwatched scenes and only backfills with watched
+// ones when there are not enough unwatched to fill the grid.
+
+import { useQuery } from "@apollo/client/react";
+import Link from "next/link";
+import { TrendingUp, Shuffle, Star, Film, Video, Users, Clapperboard, Tag, HardDrive, Timer } from "lucide-react";
+import { FIND_SCENES } from "@/lib/graphql/scene-queries";
+import { FIND_PERFORMERS } from "@/lib/graphql/performer-queries";
+import { FIND_TAGS } from "@/lib/graphql/tag-queries";
+import { GET_STATS } from "@/lib/graphql/stats-queries";
+import { SceneGrid } from "@/components/scene/SceneGrid";
+import { PerformerCard } from "@/components/performer/PerformerCard";
+import { TagBadge } from "@/components/tag/TagBadge";
+import { formatFileSize, formatDuration } from "@/lib/utils";
+import type { FindScenesResult, FindPerformersResult, FindTagsResult, StatsResult } from "@/types/stash";
+
+const PAGE_SIZE = parseInt(process.env.NEXT_PUBLIC_PAGE_SIZE ?? "60");
+
+// Reusable section header with an icon, title, and a "View All" link.
+function SectionHeader({ title, href, icon: Icon }: { title: string; href: string; icon: React.ElementType }) {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2">
+        <Icon size={18} style={{ color: "var(--primary)" }} />
+        <h2 className="text-base font-bold uppercase tracking-wide" style={{ color: "var(--text-primary)" }}>
+          {title}
+        </h2>
+      </div>
+      <Link
+        href={href}
+        className="text-xs font-semibold px-3 py-1 rounded transition-colors"
+        style={{ color: "var(--primary)", border: "1px solid var(--primary)" }}
+      >
+        View All
+      </Link>
+    </div>
+  );
+}
+
+export default function HomePage() {
+  // Fetch a random selection of unwatched scenes (play_count = 0).
+  const { data: unwatchedData, loading: unwatchedLoading } = useQuery<{ findScenes: FindScenesResult }>(FIND_SCENES, {
+    variables: {
+      filter: { sort: "random", per_page: PAGE_SIZE, page: 1 },
+      scene_filter: { play_count: { value: 1, modifier: "LESS_THAN" } },
+    },
+  });
+
+  // Always fetch a random selection of watched scenes in parallel so we can
+  // backfill the Discover grid if there are fewer unwatched than PAGE_SIZE.
+  const { data: watchedFillData, loading: watchedFillLoading } = useQuery<{ findScenes: FindScenesResult }>(FIND_SCENES, {
+    variables: {
+      filter: { sort: "random", per_page: PAGE_SIZE, page: 1 },
+      scene_filter: { play_count: { value: 0, modifier: "GREATER_THAN" } },
+    },
+  });
+
+  // Combine: fill with unwatched first, then append watched scenes only if needed.
+  const unwatchedScenes = unwatchedData?.findScenes.scenes ?? [];
+  const watchedScenes = watchedFillData?.findScenes.scenes ?? [];
+  const discoverScenes =
+    unwatchedScenes.length >= PAGE_SIZE
+      ? unwatchedScenes.slice(0, PAGE_SIZE)
+      : [...unwatchedScenes, ...watchedScenes.slice(0, PAGE_SIZE - unwatchedScenes.length)];
+  // Show loading state while fetching; if we still need filler, wait for that too.
+  const discoverLoading = unwatchedLoading || (unwatchedScenes.length < PAGE_SIZE && watchedFillLoading);
+
+  const { data: popularData, loading: popularLoading } = useQuery<{ findScenes: FindScenesResult }>(FIND_SCENES, {
+    variables: { filter: { sort: "play_count", direction: "DESC", per_page: 10, page: 1 } },
+  });
+
+  const { data: topRatedData, loading: topRatedLoading } = useQuery<{ findScenes: FindScenesResult }>(FIND_SCENES, {
+    variables: {
+      filter: { sort: "rating100", direction: "DESC", per_page: 10, page: 1 },
+      scene_filter: { rating100: { value: 1, modifier: "GREATER_THAN" } },
+    },
+  });
+
+  // Fetch a random selection of performers and tags for homepage discovery.
+  const { data: performersData } = useQuery<{ findPerformers: FindPerformersResult }>(FIND_PERFORMERS, {
+    variables: { filter: { sort: "random", per_page: 12, page: 1 } },
+  });
+
+  const { data: tagsData } = useQuery<{ findTags: FindTagsResult }>(FIND_TAGS, {
+    variables: { filter: { sort: "random", per_page: 30, page: 1 } },
+  });
+
+  const { data: statsData } = useQuery<{ stats: StatsResult }>(GET_STATS);
+
+  const stats = statsData?.stats;
+
+  return (
+    <div className="py-6">
+      {/* Discover - random, unwatched-first */}
+      <section className="mb-10">
+        <SectionHeader title="Discover" href="/scenes?sort=random" icon={Shuffle} />
+        <SceneGrid scenes={discoverScenes} loading={discoverLoading} />
+      </section>
+
+      {/* Most Watched */}
+      {(popularData?.findScenes.scenes.length ?? 0) > 0 && (
+        <section className="mb-10">
+          <SectionHeader title="Most Watched" href="/scenes?sort=play_count&dir=DESC" icon={TrendingUp} />
+          <SceneGrid scenes={popularData?.findScenes.scenes ?? []} loading={popularLoading} />
+        </section>
+      )}
+
+      {/* Top Rated */}
+      {(topRatedData?.findScenes.scenes.length ?? 0) > 0 && (
+        <section className="mb-10">
+          <SectionHeader title="Top Rated" href="/scenes?sort=rating100&dir=DESC" icon={Star} />
+          <SceneGrid scenes={topRatedData?.findScenes.scenes ?? []} loading={topRatedLoading} />
+        </section>
+      )}
+
+      {/* Tags - random selection */}
+      {tagsData?.findTags.tags.length ? (
+        <section className="mb-10">
+          <SectionHeader title="Discover Tags" href="/tags" icon={Shuffle} />
+          <div className="flex flex-wrap gap-2">
+            {tagsData.findTags.tags.map((tag) => (
+              <TagBadge key={tag.id} tag={tag} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {/* Performers - random selection */}
+      {performersData?.findPerformers.performers.length ? (
+        <section className="mb-10">
+          <SectionHeader title="Discover Performers" href="/performers" icon={Shuffle} />
+          <div className="grid gap-4 grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
+            {performersData.findPerformers.performers.map((p) => (
+              <PerformerCard key={p.id} performer={p} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {/* Stats banner */}
+      {stats && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4 mb-8">
+          {[
+            { label: "Videos", value: stats.scene_count.toLocaleString(), icon: Video },
+            { label: "Performers", value: stats.performer_count.toLocaleString(), icon: Users },
+            { label: "Studios", value: stats.studio_count.toLocaleString(), icon: Clapperboard },
+            { label: "Tags", value: stats.tag_count.toLocaleString(), icon: Tag },
+            { label: "Total Size", value: formatFileSize(stats.scenes_size), icon: HardDrive },
+            { label: "Total Duration", value: formatDuration(stats.scenes_duration), icon: Timer },
+          ].map(({ label, value, icon: Icon }) => (
+            <div
+              key={label}
+              className="flex flex-col gap-2 p-4 rounded-lg"
+              style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)" }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <div
+                className="flex items-center justify-center w-8 h-8 rounded-md"
+                style={{ backgroundColor: "var(--primary-dim)" }}
+              >
+                <Icon size={15} style={{ color: "var(--primary)" }} />
+              </div>
+              <span className="text-xl font-bold leading-none" style={{ color: "var(--text-primary)" }}>
+                {value}
+              </span>
+              <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                {label}
+              </span>
+            </div>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      )}
     </div>
   );
 }
