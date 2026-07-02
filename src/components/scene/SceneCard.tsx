@@ -8,7 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Star } from "lucide-react";
+import { Star, Eye } from "lucide-react";
 import type { Scene } from "@/types/stash";
 import { formatDuration, formatViews, getResolution, cn, toProxyUrl } from "@/lib/utils";
 import { TimeAgo } from "@/components/ui/TimeAgo";
@@ -93,10 +93,10 @@ export function SceneCard({ scene, className }: Props) {
           )
         )}
 
-        {/* Duration badge - hidden while previewing so the content stays clean */}
+        {/* Duration badge - always visible, even during hover preview */}
         {duration > 0 && (
           <span
-            className="absolute bottom-1.5 right-1.5 text-xs font-bold px-1.5 py-0.5 rounded transition-opacity duration-200 group-hover:opacity-0"
+            className="absolute bottom-1.5 right-1.5 text-xs font-bold px-1.5 py-0.5 rounded"
             style={{ backgroundColor: "rgba(0,0,0,0.85)", color: "white" }}
           >
             {formatDuration(duration)}
@@ -123,6 +123,17 @@ export function SceneCard({ scene, className }: Props) {
             style={{ backgroundColor: "#00b300", color: "white" }}
           >
             ✓
+          </span>
+        )}
+
+        {/* Watched badge - shown when play_count is non-zero, meaning the scene has been played at least once */}
+        {(scene.play_count ?? 0) > 0 && (
+          <span
+            className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 text-[10px] font-bold px-1 py-0.5 rounded"
+            style={{ backgroundColor: "rgba(0,0,0,0.85)", color: "white" }}
+          >
+            <Eye size={9} />
+            Watched
           </span>
         )}
       </div>
@@ -152,15 +163,25 @@ export function SceneCard({ scene, className }: Props) {
             </span>
           )}
 
-          {/* Performers */}
-          {scene.performers?.length > 0 && (() => {
-            const names = scene.performers.map((p) => p.name).join(", ");
-            return (
-              <p className="text-xs truncate" style={{ color: "var(--text-secondary)" }} title={names}>
-                {names}
-              </p>
-            );
-          })()}
+          {/* Performers - each name is individually clickable to avoid nesting <a> inside the card's <a> */}
+          {scene.performers?.length > 0 && (
+            <p className="text-xs truncate" style={{ color: "var(--text-secondary)" }} title={scene.performers.map((p) => p.name).join(", ")}>
+              {scene.performers.map((p, i) => (
+                <span key={p.id}>
+                  <span
+                    role="link"
+                    tabIndex={0}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/performers/${p.id}`); }}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); router.push(`/performers/${p.id}`); } }}
+                    className="hover:text-primary hover:underline cursor-pointer transition-colors"
+                  >
+                    {p.name}
+                  </span>
+                  {i < scene.performers.length - 1 && ", "}
+                </span>
+              ))}
+            </p>
+          )}
 
           {/* Meta row */}
           <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
