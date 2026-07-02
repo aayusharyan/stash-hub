@@ -38,8 +38,8 @@ STASH_INTERNAL_URL=http://your-stash-host:9999
 # Optional: API key from Stash → Settings → Security → API Key
 STASH_API_KEY=
 
-# Optional: URL your browser uses to reach Stash (used for "Open Stash" links)
-# Defaults to STASH_INTERNAL_URL value if not set
+# Optional: Browser-facing URL of your Stash instance. Used for the "Open Stash"
+# footer link and edit links on scene, performer, and studio detail pages.
 NEXT_PUBLIC_STASH_EXTERNAL_URL=http://your-stash-host:9999
 
 # Optional: number of items per page (default: 60)
@@ -57,13 +57,13 @@ docker compose -f docker/docker-compose.yml up -d
 
 ### Variable Reference
 
-| Variable                         | Description                                                              | Default                 |
-| -------------------------------- | ------------------------------------------------------------------------ | ----------------------- |
-| `STASH_INTERNAL_URL`             | Your Stash instance URL. Server-side only, never exposed to the browser. | `http://localhost:9999` |
-| `STASH_API_KEY`                  | Stash API key. Server-side only, never exposed to the browser.           | _(empty)_               |
-| `NEXT_PUBLIC_STASH_EXTERNAL_URL` | URL your browser uses to reach Stash. Controls "Open Stash" links.       | `http://localhost:9999` |
-| `NEXT_PUBLIC_PAGE_SIZE`          | Number of items per page in listing views.                               | `60`                    |
-| `STASH_HUB_PORT`                 | Host port to expose StashHub on.                                         | `7676`                  |
+| Variable                         | Description                                                                                                         | Default                 |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `STASH_INTERNAL_URL`             | Your Stash instance URL. Server-side only, never exposed to the browser.                                            | `http://localhost:9999` |
+| `STASH_API_KEY`                  | Stash API key. Server-side only, never exposed to the browser.                                                      | _(empty)_               |
+| `NEXT_PUBLIC_STASH_EXTERNAL_URL` | Browser-facing Stash URL. Powers the "Open Stash" footer link and edit links on scene, performer, and studio pages. | `http://localhost:9999` |
+| `NEXT_PUBLIC_PAGE_SIZE`          | Number of items per page in listing views.                                                                          | `60`                    |
+| `STASH_HUB_PORT`                 | Host port to expose StashHub on.                                                                                    | `7676`                  |
 
 > **How `NEXT_PUBLIC_*` vars work at runtime:** The pre-built image uses placeholder strings in the compiled bundle. The container's `entrypoint.sh` replaces them with your actual env var values on every startup — no image rebuild needed.
 
