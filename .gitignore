@@ -40,7 +40,8 @@ yarn-error.log*
 .vercel
 
 # public folder - no static assets are committed; place files here locally as needed
-/public
+/public/*
+!/public/.gitkeep
 
 # typescript
 *.tsbuildinfo
