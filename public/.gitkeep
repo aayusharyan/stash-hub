@@ -1,0 +1,4 @@
+# This directory has no static assets, but it must exist so the Dockerfile can
+# COPY it into the runner stage. Without this file, the directory is absent from
+# the git checkout and the Docker build fails with "/app/public: not found".
+# .gitignore tracks /public/* to ignore actual assets while keeping this file.
