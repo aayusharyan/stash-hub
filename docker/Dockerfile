@@ -44,7 +44,7 @@ WORKDIR /app
 LABEL org.opencontainers.image.source="https://github.com/aayusharyan/stash-hub"
 LABEL org.opencontainers.image.description="Polished Next.js frontend for self-hosted Stash"
 LABEL org.opencontainers.image.licenses="MIT"
-LABEL version="0.2.0"
+LABEL version="0.3.0"
 
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
