@@ -1,0 +1,21 @@
+# Project metadata and dependency declaration for the async Python backend.
+# The version here is the single source of truth bumped by the release workflow.
+
+[project]
+name = "stash-hub-backend"
+version = "0.4.0"
+description = "High-concurrency async backend that wraps Stash GraphQL behind a typed REST API and proxies media streams."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "gunicorn>=23.0",
+    "httpx[http2]>=0.27",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.5",
+    "pillow>=10.4",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
