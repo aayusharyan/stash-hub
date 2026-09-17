@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" class="font-sans">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ff9000" />
+    <meta
+      name="description"
+      content="A modern, open-source frontend for your self-hosted Stash collection - scenes, performers, studios, and everything in between."
+    />
+    <title>StashHub</title>
+    <!--
+      Blocking script that runs before paint to apply the saved theme/accent from
+      localStorage, preventing a flash of unstyled content. It also creates the
+      favicon <link> imperatively so React never overwrites it and it can be
+      force-refreshed when settings change.
+    -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("stash-hub-theme") || "system";
+          var resolved =
+            t === "system"
+              ? window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light"
+              : t;
+          document.documentElement.classList.add(resolved);
+          var a = localStorage.getItem("stash-hub-accent") || "orange";
+          var map = {
+            orange: "#ff9000",
+            blue: "#0d6efd",
+            red: "#e50914",
+            purple: "#9147ff",
+            green: "#1db954",
+            teal: "#00b4b4",
+          };
+          var c = map[a] || "#ff9000";
+          var r = document.documentElement;
+          r.style.setProperty("--primary", c);
+          r.style.setProperty("--primary-dim", c + "33");
+          r.style.setProperty("--ring", c);
+          r.style.setProperty("--sidebar-primary", c);
+          r.style.setProperty("--sidebar-ring", c);
+          r.style.setProperty("--chart-1", c);
+          var link = document.createElement("link");
+          link.id = "app-favicon";
+          link.rel = "icon";
+          link.type = "image/png";
+          link.sizes = "32x32";
+          link.href = "/api/favicon/" + a + "-" + resolved + ".png";
+          document.head.appendChild(link);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
