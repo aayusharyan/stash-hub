@@ -9,7 +9,7 @@ import { TrendingUp, Shuffle, Star, Video, Users, Clapperboard, Tag, HardDrive, 
 import { SceneGrid } from "@/components/scene/SceneGrid";
 import { PerformerCard } from "@/components/performer/PerformerCard";
 import { TagBadge } from "@/components/tag/TagBadge";
-import { formatFileSize, formatDuration } from "@/lib/utils";
+import { formatFileSize, formatTotalDuration } from "@/lib/utils";
 import { useConfig } from "@/contexts/ConfigContext";
 import { usePerformers, useScenes, useStats, useTags } from "@/lib/queries";
 import { useDocumentTitle } from "@/lib/useDocumentTitle";
@@ -140,7 +140,7 @@ export default function HomePage() {
             { label: "Studios", value: stats.studio_count.toLocaleString(), icon: Clapperboard },
             { label: "Tags", value: stats.tag_count.toLocaleString(), icon: Tag },
             { label: "Total Size", value: formatFileSize(stats.scenes_size), icon: HardDrive },
-            { label: "Total Duration", value: formatDuration(stats.scenes_duration), icon: Timer },
+            { label: "Total Duration", value: formatTotalDuration(stats.scenes_duration), icon: Timer },
           ].map(({ label, value, icon: Icon }) => (
             <div
               key={label}
@@ -153,7 +153,7 @@ export default function HomePage() {
               >
                 <Icon size={15} style={{ color: "var(--primary)" }} />
               </div>
-              <span className="text-xl font-bold leading-none" style={{ color: "var(--text-primary)" }}>
+              <span className="text-xl font-bold leading-none whitespace-nowrap" style={{ color: "var(--text-primary)" }}>
                 {value}
               </span>
               <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
