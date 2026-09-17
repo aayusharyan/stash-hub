@@ -1,21 +1,24 @@
-# Build artefacts
-.next
-out
+# Build artefacts and dependencies (reinstalled/rebuilt inside the image).
+**/node_modules
+**/dist
+**/__pycache__
+**/*.pyc
+**/.venv
+**/venv
 
-# Dependencies (reinstalled inside Docker)
-node_modules
-
-# Local env - values are passed as build args instead
+# Local env files - config is passed as runtime env vars instead.
+.env
 .env.local
 .env.*.local
 
-# Dev/editor noise
+# Dev/editor noise.
 .git
 .github
 .vscode
-*.md
+.claude
+**/*.md
 npm-debug.log*
 
-# OS
+# OS.
 .DS_Store
 Thumbs.db
