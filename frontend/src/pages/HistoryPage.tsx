@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { History } from "lucide-react";
 
 import { SceneGrid } from "@/components/scene/SceneGrid";
+import { CountLabel } from "@/components/ui/CountLabel";
 import { PaginationBar } from "@/components/ui/PaginationBar";
 import { useConfig } from "@/contexts/ConfigContext";
 import { useScenes } from "@/lib/queries";
@@ -42,11 +43,11 @@ export default function HistoryPage() {
         <History size={22} style={{ color: "var(--primary)" }} />
         <div>
           <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Watch History</h1>
-          {total > 0 && (
-            <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
-              {total.toLocaleString()} {total === 1 ? "video" : "videos"} watched
-            </p>
-          )}
+          <CountLabel loading={isLoading}>
+            {total > 0
+              ? `${total.toLocaleString()} ${total === 1 ? "video" : "videos"} watched`
+              : null}
+          </CountLabel>
         </div>
       </div>
 
