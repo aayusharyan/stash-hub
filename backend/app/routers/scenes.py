@@ -1,7 +1,7 @@
 # REST endpoints for scenes: the unified paginated list, single-scene detail,
-# and the four mutations (like/dislike counter, play count, rating). The list
-# endpoint translates flat query params into Stash's filter + scene_filter so a
-# single route serves the home feed, browse, search, related and history views.
+# and the two mutations (play count, rating). The list endpoint translates flat
+# query params into Stash's filter + scene_filter so a single route serves the
+# home feed, browse, search, related and history views.
 
 from typing import Annotated, Any
 
@@ -121,26 +121,6 @@ async def get_scene(
     if not scene:
         raise HTTPException(status_code=404, detail="Scene not found")
     return proxy_media_urls(scene)
-
-
-# Increments the scene's like (o) counter and returns the new value.
-@router.post("/scenes/{scene_id}/o/increment")
-async def increment_o(
-    scene_id: str,
-    stash: Annotated[StashClient, Depends(get_stash)],
-) -> dict[str, int]:
-    data = await stash.query(gql.SCENE_INCREMENT_O, {"id": scene_id})
-    return {"count": data["sceneIncrementO"]}
-
-
-# Decrements the scene's like (o) counter and returns the new value.
-@router.post("/scenes/{scene_id}/o/decrement")
-async def decrement_o(
-    scene_id: str,
-    stash: Annotated[StashClient, Depends(get_stash)],
-) -> dict[str, int]:
-    data = await stash.query(gql.SCENE_DECREMENT_O, {"id": scene_id})
-    return {"count": data["sceneDecrementO"]}
 
 
 # Records a play for the scene and returns the updated play count.
