@@ -22,8 +22,8 @@ MEDIA_KEYS = {
 
 
 # Rewrites a single absolute Stash media URL to a relative /api/stash path.
-# Mirrors the original frontend toProxyUrl: it keeps only the path and query and
-# discards the origin, so whatever base Stash reports is irrelevant.
+# Keeps only the path and query and discards the origin, so whatever base Stash
+# reports is irrelevant.
 def to_proxy_url(value: str | None) -> str | None:
     if not value:
         return value
