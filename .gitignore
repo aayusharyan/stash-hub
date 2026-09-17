@@ -1,48 +1,32 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Dependencies
+**/node_modules
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Frontend build output
+**/dist
+/frontend/dist
 
-# testing
+# Python
+**/__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Testing / coverage
 /coverage
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
+# Misc
 .DS_Store
 *.pem
 
-# debug
+# Debug logs
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
 
-# env files - keep .env.example but not secrets
+# Env files - keep .env.example but not secrets
+.env
 .env.local
 .env.*.local
-# but don't ignore the example
 !.env.example
 
-# vercel
-.vercel
-
-# public folder - no static assets are committed; place files here locally as needed
-/public/*
-!/public/.gitkeep
-
-# typescript
+# TypeScript
 *.tsbuildinfo
-next-env.d.ts
