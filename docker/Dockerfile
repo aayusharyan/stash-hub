@@ -1,69 +1,52 @@
-# =============================================================================
-# @file Dockerfile
-# @description Multi-stage Docker build for the Next.js app.
+# Multi-stage build producing a single image that runs the whole stack:
+#   Stage 1 (web-build): compiles the Vite/React SPA into static assets.
+#   Stage 2 (runtime):   Debian-slim base with Python + nginx + supervisord.
+#                        nginx serves the SPA and reverse-proxies /api to gunicorn.
 #
-# Stage 1 (deps): installs npm dependencies with a frozen lockfile.
-# Stage 2 (builder): compiles the Next.js app in standalone output mode.
-# Stage 3 (runner): minimal production image running as a non-root user.
-#
-# NEXT_PUBLIC_* vars are baked in as placeholder strings at build time; entrypoint.sh
-# replaces them with real values at container startup so the image is reusable.
-# Runtime-only vars (STASH_INTERNAL_URL, STASH_API_KEY) are injected by Docker directly.
-# =============================================================================
+# The SPA fetches externalUrl/pageSize from /api/config at runtime, so one image
+# works for any deployment without a rebuild.
 
 # syntax=docker/dockerfile:1
 
-FROM node:22-alpine AS deps
-WORKDIR /app
+FROM node:22-alpine AS web-build
+WORKDIR /web
 
-COPY package.json package-lock.json* ./
-RUN npm ci --frozen-lockfile
+# Install JS deps first so the layer caches until the lockfile changes.
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm ci
 
-FROM node:22-alpine AS builder
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-# Placeholder values are baked into the bundle at compile time.
-# The entrypoint.sh script replaces them with real env var values at container startup,
-# so a single pre-built image works for any deployment target without a rebuild.
-ARG NEXT_PUBLIC_STASH_EXTERNAL_URL=__NEXT_PUBLIC_STASH_EXTERNAL_URL__
-ARG NEXT_PUBLIC_PAGE_SIZE=__NEXT_PUBLIC_PAGE_SIZE__
-
-ENV NEXT_PUBLIC_STASH_EXTERNAL_URL=$NEXT_PUBLIC_STASH_EXTERNAL_URL \
-    NEXT_PUBLIC_PAGE_SIZE=$NEXT_PUBLIC_PAGE_SIZE \
-    NEXT_TELEMETRY_DISABLED=1 \
-    NODE_ENV=production
-
+COPY frontend/ ./
 RUN npm run build
 
-FROM node:22-alpine AS runner
+FROM python:3.12-slim AS runtime
 WORKDIR /app
 
 LABEL org.opencontainers.image.source="https://github.com/aayusharyan/stash-hub"
-LABEL org.opencontainers.image.description="Polished Next.js frontend for self-hosted Stash"
+LABEL org.opencontainers.image.description="High-concurrency Python backend + React SPA for self-hosted Stash"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL version="0.4.0"
 
-ENV NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1 \
-    PORT=7676 \
-    HOSTNAME=0.0.0.0
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    BACKEND_BIND=127.0.0.1:8000
 
-RUN addgroup --system --gid 1001 nodejs \
- && adduser  --system --uid 1001 nextjs
+# nginx serves static assets and proxies /api; supervisor runs nginx + gunicorn together.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends nginx supervisor \
+ && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+# Install backend Python deps in their own layer for build-cache friendliness.
+COPY backend/requirements.txt ./backend/requirements.txt
+RUN pip install --no-cache-dir -r backend/requirements.txt
 
-# entrypoint.sh replaces placeholder env vars in the bundle at container startup.
-COPY --chown=nextjs:nodejs docker/entrypoint.sh ./entrypoint.sh
-RUN chmod +x entrypoint.sh
+# Backend source and process configs.
+COPY backend/ ./backend/
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY docker/supervisord.conf /etc/supervisor/conf.d/stash-hub.conf
 
-USER nextjs
+# Compiled SPA -> nginx web root.
+COPY --from=web-build /web/dist /usr/share/nginx/html
 
 EXPOSE 7676
 
-CMD ["sh", "entrypoint.sh"]
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/stash-hub.conf"]
