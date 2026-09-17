@@ -19,7 +19,7 @@ const SORT_OPTIONS = [
   { value: "performer_count_DESC", label: "Most Performers" },
 ];
 
-export default function TagsPage() {
+export default function TagListPage() {
   useDocumentTitle("Tags");
   const navigate = useNavigate();
   const [params] = useSearchParams();
