@@ -1,0 +1,10 @@
+# Pinned runtime dependencies installed inside the Docker image.
+# Keep in sync with the dependency list in pyproject.toml.
+
+fastapi>=0.115
+uvicorn[standard]>=0.32
+gunicorn>=23.0
+httpx[http2]>=0.27
+pydantic>=2.9
+pydantic-settings>=2.5
+pillow>=10.4
