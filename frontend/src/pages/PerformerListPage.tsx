@@ -20,7 +20,7 @@ const SORT_OPTIONS = [
   { value: "created_at_DESC", label: "Recently Added" },
 ];
 
-export default function PerformersPage() {
+export default function PerformerListPage() {
   useDocumentTitle("Performers");
   const navigate = useNavigate();
   const [params] = useSearchParams();

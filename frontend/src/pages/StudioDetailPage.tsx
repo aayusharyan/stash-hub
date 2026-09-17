@@ -14,7 +14,7 @@ import { useConfig } from "@/contexts/ConfigContext";
 import { useScenes, useStudio } from "@/lib/queries";
 import { useDocumentTitle } from "@/lib/useDocumentTitle";
 
-export default function StudioPage() {
+export default function StudioDetailPage() {
   const { id = "" } = useParams();
   const { externalUrl, pageSize } = useConfig();
   const [page, setPage] = useState(1);

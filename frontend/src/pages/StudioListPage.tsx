@@ -19,7 +19,7 @@ const SORT_OPTIONS = [
   { value: "created_at_DESC", label: "Recently Added" },
 ];
 
-export default function StudiosPage() {
+export default function StudioListPage() {
   useDocumentTitle("Studios");
   const navigate = useNavigate();
   const [params] = useSearchParams();
