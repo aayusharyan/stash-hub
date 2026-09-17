@@ -1,7 +1,7 @@
 # Async client that talks to the upstream Stash GraphQL API.
-# It holds every GraphQL document the backend needs (ported from the original
-# frontend query files) and a thin executor that injects the API key and returns
-# the decoded data object. All REST routers go through this single client.
+# It holds every GraphQL document the backend needs and a thin executor that
+# injects the API key and returns the decoded data object. All REST routers go
+# through this single client.
 
 from typing import Any
 
@@ -118,7 +118,6 @@ query FindScene($id: ID!) {
     url
     date
     rating100
-    o_counter
     play_count
     organized
     interactive
@@ -293,9 +292,7 @@ query GetStats {
 }
 """
 
-# Mutations mirroring the four scene actions the UI can trigger.
-SCENE_INCREMENT_O = "mutation SceneIncrementO($id: ID!) { sceneIncrementO(id: $id) }"
-SCENE_DECREMENT_O = "mutation SceneDecrementO($id: ID!) { sceneDecrementO(id: $id) }"
+# Mutations mirroring the two scene actions the UI can trigger.
 SCENE_ADD_PLAY = "mutation SceneAddPlay($id: ID!) { sceneAddPlay(id: $id) { count } }"
 SCENE_UPDATE = """
 mutation SceneUpdate($input: SceneUpdateInput!) {
