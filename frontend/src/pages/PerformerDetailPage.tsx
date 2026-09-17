@@ -9,6 +9,7 @@ import { code as toCountryCode } from "country-emoji";
 
 import { SceneGrid } from "@/components/scene/SceneGrid";
 import { TagBadge } from "@/components/tag/TagBadge";
+import { CountSkeleton } from "@/components/ui/CountLabel";
 import { PaginationBar } from "@/components/ui/PaginationBar";
 import { TimeAgo } from "@/components/ui/TimeAgo";
 import { ageFromBirthdate, genderLabel, toProxyUrl } from "@/lib/utils";
@@ -56,7 +57,7 @@ function CountryChip({ country }: { country: string }) {
   );
 }
 
-export default function PerformerPage() {
+export default function PerformerDetailPage() {
   const { id = "" } = useParams();
   const { externalUrl } = useConfig();
   const { pageSize } = useConfig();
@@ -131,7 +132,7 @@ export default function PerformerPage() {
             {/* Avatar */}
             <div
               className="relative flex-shrink-0 rounded overflow-hidden"
-              style={{ width: 140, height: 180, backgroundColor: "#1a1a1a" }}
+              style={{ width: 140, height: 180, backgroundColor: "var(--bg-secondary)" }}
             >
               {performer.image_path && !imgError ? (
                 <img
@@ -141,7 +142,7 @@ export default function PerformerPage() {
                   onError={() => setImgError(true)}
                 />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-5xl font-bold" style={{ color: "#444" }}>
+                <div className="absolute inset-0 flex items-center justify-center text-5xl font-bold" style={{ color: "var(--text-muted)" }}>
                   {performer.name.charAt(0)}
                 </div>
               )}
@@ -263,8 +264,13 @@ export default function PerformerPage() {
 
       {/* Scenes */}
       <div className="py-6">
-        <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)" }}>
-          Videos ({total.toLocaleString()})
+        <h2 className="text-base font-bold mb-4 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+          Videos
+          {scenesLoading ? (
+            <CountSkeleton className="w-16" />
+          ) : (
+            <span>({total.toLocaleString()})</span>
+          )}
         </h2>
         <SceneGrid scenes={scenesData?.scenes ?? []} loading={scenesLoading} />
         <PaginationBar page={page} totalPages={totalPages} onPageChange={setPage} />
