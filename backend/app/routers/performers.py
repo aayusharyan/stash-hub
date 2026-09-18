@@ -20,7 +20,7 @@ async def list_performers(
     stash: Annotated[StashClient, Depends(get_stash)],
     page: int = 1,
     per_page: int | None = None,
-    sort: str = "scenes_count",
+    sort: str = "random",
     dir: str = "DESC",
     q: str | None = None,
     gender: str | None = None,
