@@ -72,7 +72,7 @@ async def list_scenes(
     stash: Annotated[StashClient, Depends(get_stash)],
     page: int = 1,
     per_page: int | None = None,
-    sort: str = "date",
+    sort: str = "random",
     dir: str = "DESC",
     q: str | None = None,
     performer_id: str | None = None,
