@@ -179,10 +179,17 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* Skeleton bars sit on --bg-secondary so they follow light/dark instead of
+   a hardcoded dark grey. Higher specificity than tw-shimmer's background
+   shorthand keeps the colour while the gradient overlay still animates. */
+.shimmer.shimmer-bg {
+  background-color: var(--bg-secondary);
+}
+
 
 /* Tie the Vidstack brand/accent colour to the app's --primary token so it
    updates automatically when the user switches theme colours. */
-.vds-player {
+[data-media-player] {
   --media-brand: var(--primary);
   --media-focus-ring-color: var(--primary);
   --media-menu-bg: #1b1b1b;
@@ -192,11 +199,35 @@ body {
 }
 
 /* Expand the progress/time slider track on hover - YouTube-style behaviour. */
-.vds-player:hover .vds-time-slider .vds-slider-track {
+[data-media-player]:hover .vds-time-slider .vds-slider-track {
   height: 5px;
 }
-.vds-player:hover .vds-time-slider .vds-slider-thumb {
+[data-media-player]:hover .vds-time-slider .vds-slider-thumb {
   transform: translateY(-50%) scale(1);
+}
+
+/* Vidstack parks the hover preview at the top of the 45px slider hit-area
+   (bottom: 100%), which floats the thumbnail well above the track. Pull it
+   down, leaving ~12px so it clears the hover thumb circle. Overlay the
+   timestamp on the frame so the label doesn't add extra gap. */
+[data-media-player] .vds-time-slider {
+  --media-slider-preview-offset: -8px;
+}
+
+[data-media-player] .vds-time-slider .vds-slider-chapter-title:empty {
+  display: none;
+}
+
+[data-media-player] .vds-time-slider .vds-slider-value {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 0;
+  background: rgb(0 0 0 / 0.75);
+  padding: 1px 6px;
+  font-size: 12px;
+  pointer-events: none;
 }
 
 a {
@@ -211,6 +242,13 @@ button {
 :focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* Radix focuses a hovered menu item, which would otherwise pick up the ring above. */
+.theme-mode-item:focus,
+.theme-mode-item:focus-visible {
+  outline: none;
+  outline-offset: 0;
 }
 
 .line-clamp-1 {
