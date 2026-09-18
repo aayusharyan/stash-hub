@@ -20,7 +20,7 @@ async def list_tags(
     stash: Annotated[StashClient, Depends(get_stash)],
     page: int = 1,
     per_page: int | None = None,
-    sort: str = "scenes_count",
+    sort: str = "random",
     dir: str = "DESC",
     q: str | None = None,
 ) -> dict[str, Any]:
