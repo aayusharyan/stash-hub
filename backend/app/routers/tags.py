@@ -1,5 +1,5 @@
 # REST endpoints for tags: a paginated list and a single tag detail with its
-# parent/child hierarchy.
+# child tags.
 
 from typing import Annotated, Any
 
@@ -34,7 +34,7 @@ async def list_tags(
     return proxy_media_urls(data["findTags"])
 
 
-# Full detail for one tag including parent and child tags.
+# Full detail for one tag including child tags.
 @router.get("/tags/{tag_id}")
 async def get_tag(
     tag_id: str,
