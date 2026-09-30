@@ -3,8 +3,7 @@
 #   Stage 2 (runtime):   Debian-slim base with Python + nginx + supervisord.
 #                        nginx serves the SPA and reverse-proxies /api to gunicorn.
 #
-# The SPA fetches externalUrl/pageSize from /api/config at runtime, so one image
-# works for any deployment without a rebuild.
+# The SPA fetches externalUrl/pageSize from /api/config at runtime.
 
 # syntax=docker/dockerfile:1
 
