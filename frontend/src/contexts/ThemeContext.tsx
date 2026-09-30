@@ -84,8 +84,8 @@ function syncFavicon(accentKey: AccentKey, resolvedTheme: "light" | "dark") {
   link.rel   = "icon";
   link.type  = "image/png";
   link.sizes = "32x32";
-  // Pre-rendered file served by the backend; the variant is the filename.
-  link.href  = `/api/favicon/${accentKey}-${resolvedTheme}.png`;
+  // Pre-baked static PNG under public/favicons; the variant is the filename.
+  link.href  = `/favicons/${accentKey}-${resolvedTheme}.png`;
   document.head.appendChild(link);
 }
 
