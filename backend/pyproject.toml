@@ -3,7 +3,7 @@
 
 [project]
 name = "stash-hub-backend"
-version = "0.5.0"
+version = "1.0.0"
 description = "High-concurrency async backend that wraps Stash GraphQL behind a typed REST API and proxies media streams."
 requires-python = ">=3.11"
 dependencies = [

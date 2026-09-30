@@ -24,7 +24,7 @@ WORKDIR /app
 LABEL org.opencontainers.image.source="https://github.com/aayusharyan/stash-hub"
 LABEL org.opencontainers.image.description="High-concurrency Python backend + React SPA for self-hosted Stash"
 LABEL org.opencontainers.image.licenses="MIT"
-LABEL version="0.5.0"
+LABEL version="1.0.0"
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
