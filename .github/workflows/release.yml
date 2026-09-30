@@ -3,9 +3,9 @@
 # @description Automated release workflow with Docker image publishing to GHCR.
 #
 # Triggered manually from the Actions tab. Calculates the next semver from the
-# latest git tag, bumps the version in package.json and docker/Dockerfile,
-# commits & tags, builds a multi-platform Docker image, pushes to GHCR, and
-# creates a GitHub Release with auto-generated changelog.
+# latest git tag, bumps the version in frontend/package.json, backend/pyproject.toml
+# and docker/Dockerfile, commits & tags, builds a multi-platform Docker image,
+# pushes to GHCR, and creates a GitHub Release with auto-generated changelog.
 #
 # Usage: Actions tab → Create Release → Run workflow → Select version bump type
 #
@@ -78,16 +78,22 @@ jobs:
           echo "major_minor=${MAJOR}.${MINOR}" >> $GITHUB_OUTPUT
           echo "major=${MAJOR}" >> $GITHUB_OUTPUT
 
-      # Bumps version in package.json (using jq) and LABEL in docker/Dockerfile (using sed)
+      # Bumps version in frontend/package.json (jq), backend/pyproject.toml (sed),
+      # and the LABEL in docker/Dockerfile (sed).
       - name: Update version in codebase
         run: |
-          jq '.version = "${{ steps.version.outputs.version_number }}"' package.json > package.json.tmp
-          mv package.json.tmp package.json
+          jq '.version = "${{ steps.version.outputs.version_number }}"' frontend/package.json > frontend/package.json.tmp
+          mv frontend/package.json.tmp frontend/package.json
+
+          sed -i 's/^version = ".*"/version = "${{ steps.version.outputs.version_number }}"/' backend/pyproject.toml
 
           sed -i 's/LABEL version=".*"/LABEL version="${{ steps.version.outputs.version_number }}"/' docker/Dockerfile
 
-          echo "Updated version in package.json:"
-          grep '"version"' package.json
+          echo "Updated version in frontend/package.json:"
+          grep '"version"' frontend/package.json
+          echo ""
+          echo "Updated version in backend/pyproject.toml:"
+          grep '^version = ' backend/pyproject.toml
           echo ""
           echo "Updated version in docker/Dockerfile:"
           grep 'LABEL version=' docker/Dockerfile
@@ -97,7 +103,7 @@ jobs:
         run: |
           git config user.name "Aayush Sinha"
           git config user.email "hello@yush.dev"
-          git add package.json docker/Dockerfile
+          git add frontend/package.json backend/pyproject.toml docker/Dockerfile
           if git diff --cached --quiet; then
             echo "Files already at version ${{ steps.version.outputs.version_number }}, skipping commit"
           else
@@ -132,8 +138,14 @@ jobs:
           ## Docker
 
           \`\`\`bash
-          docker compose -f docker/docker-compose.yml up -d
+          docker run -d -p 7676:7676 \\
+            -e STASH_INTERNAL_URL=http://your-stash-host:9999 \\
+            -e STASH_API_KEY=your-api-key \\
+            --name stash-hub \\
+            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.new_version }}
           \`\`\`
+
+          An example Compose file is at \`docker/docker-compose.example.yaml\`.
 
           Or pull the image directly:
 
@@ -182,10 +194,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Default NEXT_PUBLIC_* values baked into the released image
-          build-args: |
-            NEXT_PUBLIC_STASH_EXTERNAL_URL=http://localhost:9999
-            NEXT_PUBLIC_PAGE_SIZE=60
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
