@@ -44,7 +44,7 @@ export default function TagDetailPage() {
   if (!tag) {
     return (
       <div className="flex flex-col items-center justify-center h-96" style={{ color: "var(--text-muted)" }}>
-        <p className="text-xl mb-2">Tag not found</p>
+        <h1 className="text-xl mb-2 font-normal">Tag not found</h1>
         <Link to="/tags" style={{ color: "var(--primary)" }}>← Back to tags</Link>
       </div>
     );
@@ -115,7 +115,7 @@ export default function TagDetailPage() {
           <div className="flex flex-wrap gap-4 mb-6">
             {tag.children && tag.children.length > 0 && (
               <div>
-                <p className="text-xs uppercase font-semibold mb-2" style={{ color: "var(--text-muted)" }}>Sub-Tags</p>
+                <h2 className="text-xs uppercase font-semibold mb-2" style={{ color: "var(--text-muted)" }}>Sub-Tags</h2>
                 <div className="flex flex-wrap gap-1.5">
                   {tag.children.map((t) => (
                     <Link
