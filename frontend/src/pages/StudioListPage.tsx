@@ -64,7 +64,7 @@ export default function StudioListPage() {
         <div>
           <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Studios</h1>
           <CountLabel loading={isLoading}>
-            {total > 0 ? `${total.toLocaleString()} studios` : null}
+            {`${total.toLocaleString()} studios`}
           </CountLabel>
         </div>
         <SortSelect value={sortKey} options={SORT_OPTIONS} onChange={updateSort} label="Sort" />
