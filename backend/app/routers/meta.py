@@ -1,6 +1,5 @@
 # Meta endpoints that are not Stash data: runtime config for the SPA and the
-# themed favicon. Serving config from here removes the need to bake build-time env
-# vars into the frontend bundle. Favicons are pre-rendered to disk at startup (see
+# themed favicon. Favicons are pre-rendered to disk at startup (see
 # app/favicon.py) and served here as plain static files keyed by variant name.
 
 from pathlib import Path
