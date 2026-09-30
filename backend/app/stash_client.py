@@ -259,7 +259,7 @@ query FindTags($filter: FindFilterType, $tag_filter: TagFilterType) {
 }
 """
 
-# Full tag detail including parent/child hierarchy.
+# Full tag detail including child tags for the sub-tag links on the detail page.
 FIND_TAG = """
 query FindTag($id: ID!) {
   findTag(id: $id) {
@@ -269,7 +269,6 @@ query FindTag($id: ID!) {
     image_path
     scene_count
     performer_count
-    parents { id name scene_count }
     children { id name scene_count }
   }
 }
