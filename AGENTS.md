@@ -18,8 +18,7 @@ Browser ─ /api/* ───────▶ nginx ─▶ FastAPI :8000 ─┬─
 ```
 
 Locally, Vite (`frontend/`, port 7676) proxies `/api` to uvicorn (`backend/`,
-port 8000). Runtime config for the SPA comes from `GET /api/config`, not
-build-time env.
+port 8000). Runtime config for the SPA comes from `GET /api/config`.
 
 ## Layout
 
