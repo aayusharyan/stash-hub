@@ -16,8 +16,7 @@ export function CountSkeleton({ className }: { className?: string }) {
   );
 }
 
-// Renders CountSkeleton while loading, otherwise the count text. Pass null
-// children to hide the subtitle after load (empty result sets).
+// Renders CountSkeleton while loading, otherwise the count text.
 export function CountLabel({
   loading,
   children,
