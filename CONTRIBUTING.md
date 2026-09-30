@@ -4,80 +4,109 @@ PRs are welcome. This doc covers everything you need to get up and running and t
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 20+ (frontend)
+- Python 3.12+ (backend)
 - A running [Stash](https://github.com/stashapp/stash) instance to develop against
 
 ## Setup
 
+A Python (FastAPI) backend under `backend/` and a Vite + React SPA under
+`frontend/`. Run both; the Vite dev server proxies `/api` to the backend.
+
 ```bash
 git clone https://github.com/aayusharyan/stash-hub.git
 cd stash-hub
+cp .env.example .env   # edit with your Stash URL and API key
+
+# Terminal 1 - backend (FastAPI on :8000)
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+
+# Terminal 2 - frontend (Vite dev server, proxies /api to :8000)
+cd frontend
 npm install
-cp .env.example .env.local
-# Edit .env.local with your Stash URL and API key
 npm run dev
 ```
 
-App runs at http://localhost:7676.
-
 ## Environment Variables
 
-| Variable                         | Required | Description                                                                                                         |
-| -------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
-| `STASH_INTERNAL_URL`             | Yes      | Server-side proxy target - your Stash instance URL                                                                  |
-| `STASH_API_KEY`                  | No       | Stash API key from **Settings → Security → API Key**                                                                |
-| `NEXT_PUBLIC_STASH_EXTERNAL_URL` | No       | Browser-facing Stash URL - powers the "Open Stash" footer link and edit links on scene, performer, and studio pages |
-| `NEXT_PUBLIC_PAGE_SIZE`          | No       | Items per page across listing views (default: `60`)                                                                 |
+Read by the backend at runtime; browser-facing values reach the SPA via `/api/config`.
 
-`STASH_INTERNAL_URL` and `STASH_API_KEY` are server-side only - they are never included in the client bundle.
+| Variable             | Required | Description                                                                           |
+| -------------------- | -------- | ------------------------------------------------------------------------------------- |
+| `STASH_INTERNAL_URL` | Yes      | URL the **backend** uses to reach Stash (GraphQL + media). Server-side only.          |
+| `STASH_API_KEY`      | No       | Stash API key from **Settings → Security → API Key**. Server-side only.               |
+| `STASH_EXTERNAL_URL` | No       | URL the **browser** uses to open Stash - "Open Stash" footer link and edit links only |
+| `PAGE_SIZE`          | No       | Items per page across listing views (default: `60`)                                   |
+| `WEB_CONCURRENCY`    | No       | Number of Uvicorn backend workers (default: `2 × CPU cores`)                          |
+
+These two Stash URLs are not interchangeable. The backend and the browser often
+cannot reach Stash on the same hostname:
+
+- **Locally** they can both be `http://localhost:9999`.
+- **Docker on the same machine as Stash:** internal is `http://host.docker.internal:9999` (`localhost` inside the container is the container, not Stash); external is `http://localhost:9999` (what you type in the browser).
+- **Compose / private network:** internal is a Docker DNS name like `http://stash:9999`; external is the LAN or public URL (`http://192.168.1.50:9999` or `https://stash.example.com`). The browser cannot resolve Compose service names.
+
+Playback, search, and every API call use `STASH_INTERNAL_URL` only.
+`STASH_EXTERNAL_URL` is solely for those "open / edit in Stash" links - if you
+point it at the internal URL, those links break for anyone outside Docker.
+
+`STASH_INTERNAL_URL` and `STASH_API_KEY` never reach the browser.
 
 ## Tech Stack
 
-| Layer         | Tech                          |
-| ------------- | ----------------------------- |
-| Framework     | Next.js 16 + React 19         |
-| Data fetching | Apollo Client 4 (GraphQL)     |
-| Video player  | Vidstack (HLS + VTT previews) |
-| Styling       | Tailwind CSS 4 + shadcn/ui    |
-| State         | Zustand                       |
-| Language      | TypeScript throughout         |
+| Layer         | Tech                                          |
+| ------------- | --------------------------------------------- |
+| Backend       | FastAPI + gunicorn/Uvicorn (async Python)     |
+| Upstream I/O  | httpx (async GraphQL + streaming media proxy) |
+| Frontend      | Vite + React 19 + React Router v7             |
+| Data fetching | TanStack Query v5 over a typed REST client    |
+| Video player  | Vidstack (HLS + VTT previews)                 |
+| Styling       | Tailwind CSS 4 + shadcn/ui                    |
+| Serving       | nginx (static SPA + reverse proxy)            |
 
 ## Project Structure
 
 ```
-src/
+backend/
   app/
-    api/          # Server-side proxy routes (GraphQL, media)
-    scenes/       # Scene browser and playback
-    performers/   # Performer listing and profiles
-    studios/      # Studio listing and pages
-    tags/         # Tag browser
-    search/       # Live search
-    history/      # Watch history
-    layout.tsx    # Root layout, theme, and nav
-    page.tsx      # Stats dashboard (home)
-  components/     # Shared UI components
-docker/           # Dockerfile and end-user Docker Compose
+    main.py         # FastAPI app factory + lifespan-managed httpx client
+    config.py       # Settings (pydantic-settings)
+    stash_client.py # Async GraphQL executor + query strings
+    util.py         # Media URL rewriting (Stash origin -> /api/stash)
+    routers/        # scenes, performers, studios, tags, search, stats, media, meta
+  gunicorn_conf.py  # Uvicorn worker config
+frontend/
+  src/
+    pages/          # One component per screen (Home, Scenes, Scene, ...)
+    components/     # Shared UI (layout, scene, performer, studio, tag, ui)
+    contexts/       # Theme, View, Config
+    lib/            # api.ts (REST client), queries.ts (TanStack hooks), utils.ts
+    App.tsx         # Router + layout
+    main.tsx        # Entry point + providers
+nginx/              # nginx.conf (static SPA + /api reverse proxy)
+docker/             # Dockerfile, docker-compose.example.yaml, supervisord.conf
 ```
 
 ## Architecture
 
-All requests proxy through the Next.js server. The browser never contacts Stash directly.
+nginx serves the SPA and reverse-proxies `/api/*` to the FastAPI backend. The
+browser never contacts Stash directly.
 
 ```
-Browser  →  /api/graphql   →  Stash GraphQL API
-         →  /api/stash/*   →  Stash media (images, streams, previews)
+Browser ─ /api/* ▶ nginx ─▶ FastAPI ─┬─ POST /graphql  ─▶ Stash
+                                     └─ GET media+Range ▶ Stash
 ```
 
 This keeps `STASH_INTERNAL_URL` and `STASH_API_KEY` off the client entirely.
 
 ## Code Standards
 
-- **TypeScript everywhere** - no `any` unless genuinely unavoidable
+- **Types everywhere** - TypeScript on the frontend, Python type hints + Pydantic on the backend
 - **No unused imports or variables** - clean up before opening a PR
 - **Component files** - one component per file, named to match the export
-- **`NEXT_PUBLIC_*` vars** - these are baked into the client bundle at build time; only use them for values that are safe to expose publicly
-- **Server vs. client components** - prefer React Server Components; add `"use client"` only when you need interactivity or browser APIs
+- **Never leak secrets** - the API key and internal Stash URL must stay server-side; only `/api/stash/*` and `/api/config` values reach the browser
 - **Tailwind over custom CSS** - reach for a utility class before writing new CSS
 
 ## Commit Messages
@@ -99,14 +128,19 @@ Types: `feat`, `fix`, `chore`, `refactor`, `docs`, `style`, `perf`.
 - If you're changing UI, include a screenshot or screen recording
 - PRs that break the build will not be merged
 
-## Docker (end users, not for development)
+## Docker
 
-End users run the pre-built image - no source required:
+Run the pre-built image:
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d
+docker run -d -p 7676:7676 \
+  -e STASH_INTERNAL_URL=http://your-stash-host:9999 \
+  -e STASH_API_KEY=your-api-key \
+  --name stash-hub \
+  ghcr.io/aayusharyan/stash-hub:latest
 ```
 
+For Docker Compose, use [`docker/docker-compose.example.yaml`](docker/docker-compose.example.yaml).
 See [docker/README.md](docker/README.md) for full options.
 
 ## License
