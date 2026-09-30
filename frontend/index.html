@@ -9,11 +9,13 @@
       content="A modern, open-source frontend for your self-hosted Stash collection - scenes, performers, studios, and everything in between."
     />
     <title>StashHub</title>
+    <!-- Default for crawlers / no-JS; the script below swaps it to the themed PNG. -->
+    <link id="app-favicon" rel="icon" href="/favicon.ico" sizes="32x32" />
     <!--
       Blocking script that runs before paint to apply the saved theme/accent from
-      localStorage, preventing a flash of unstyled content. It also creates the
-      favicon <link> imperatively so React never overwrites it and it can be
-      force-refreshed when settings change.
+      localStorage, preventing a flash of unstyled content. It also replaces the
+      favicon <link> with the matching themed PNG so it can be force-refreshed
+      when settings change.
     -->
     <script>
       (function () {
@@ -43,12 +45,14 @@
           r.style.setProperty("--sidebar-primary", c);
           r.style.setProperty("--sidebar-ring", c);
           r.style.setProperty("--chart-1", c);
+          var existing = document.getElementById("app-favicon");
+          if (existing) existing.remove();
           var link = document.createElement("link");
           link.id = "app-favicon";
           link.rel = "icon";
           link.type = "image/png";
           link.sizes = "32x32";
-          link.href = "/api/favicon/" + a + "-" + resolved + ".png";
+          link.href = "/favicons/" + a + "-" + resolved + ".png";
           document.head.appendChild(link);
         } catch (e) {}
       })();
