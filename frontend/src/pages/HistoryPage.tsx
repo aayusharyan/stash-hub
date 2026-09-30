@@ -44,9 +44,7 @@ export default function HistoryPage() {
         <div>
           <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Watch History</h1>
           <CountLabel loading={isLoading}>
-            {total > 0
-              ? `${total.toLocaleString()} ${total === 1 ? "video" : "videos"} watched`
-              : null}
+            {`${total.toLocaleString()} ${total === 1 ? "video" : "videos"} watched`}
           </CountLabel>
         </div>
       </div>
@@ -55,7 +53,7 @@ export default function HistoryPage() {
       {!isLoading && scenes.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 gap-3" style={{ color: "var(--text-muted)" }}>
           <History size={48} strokeWidth={1.2} />
-          <p className="text-lg font-medium">No watch history yet</p>
+          <h2 className="text-lg font-medium">No watch history yet</h2>
           <p className="text-sm">Start watching a video and it will appear here.</p>
         </div>
       )}
