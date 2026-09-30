@@ -1,11 +1,11 @@
 // Site-wide sticky header containing the logo, live search bar, nav tabs, and mobile controls.
-// Also hosts the ThemeDropdown for switching light/dark mode and accent colour.
+// Also hosts the AppearanceMenu for theme, accent colour, and grid density.
 
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Search, Home, Users, Clapperboard, Tag, Film, History } from "lucide-react";
 import { SearchBar } from "./SearchBar";
-import { ThemeDropdown } from "./ThemeDropdown";
+import { AppearanceMenu } from "./AppearanceMenu";
 import { Container } from "@/components/ui/Container";
 
 const NAV_LINKS = [
@@ -17,7 +17,7 @@ const NAV_LINKS = [
   { href: "/history", label: "History", icon: History },
 ];
 
-// Renders the site-wide sticky header including logo, search, nav tabs and theme controls.
+// Renders the site-wide sticky header including logo, search, nav tabs and appearance controls.
 export function Header() {
   const { pathname } = useLocation();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -55,7 +55,7 @@ export function Header() {
             >
               <Search size={20} />
             </button>
-            <ThemeDropdown />
+            <AppearanceMenu />
           </div>
         </div>
 
