@@ -8,7 +8,6 @@ from contextlib import asynccontextmanager
 import httpx
 from fastapi import FastAPI
 
-from . import favicon
 from .config import get_settings
 from .routers import media, meta, performers, scenes, search, stats, studios, tags
 
@@ -20,10 +19,6 @@ from .routers import media, meta, performers, scenes, search, stats, studios, ta
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
-
-    # Render every favicon variant to disk once at boot so requests only read a
-    # file. Stored on app.state for the meta router to locate.
-    app.state.favicon_dir = favicon.generate_all(settings.favicon_path)
 
     limits = httpx.Limits(
         max_connections=settings.http_max_connections,
