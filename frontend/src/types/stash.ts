@@ -53,8 +53,8 @@ export interface SceneMarker {
   tags?: Tag[];
 }
 
-// A classification label attachable to scenes and performers, forming a
-// hierarchy through the parents / children arrays.
+// A classification label attachable to scenes and performers. Child tags are
+// optional links shown on the tag detail page.
 export interface Tag {
   id: string;
   name: string;
@@ -62,7 +62,6 @@ export interface Tag {
   image_path?: string;
   scene_count: number;
   performer_count?: number;
-  parents?: Tag[];
   children?: Tag[];
 }
 
