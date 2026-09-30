@@ -145,7 +145,7 @@ jobs:
             ghcr.io/${{ github.repository }}:${{ steps.version.outputs.new_version }}
           \`\`\`
 
-          An example Compose file is at \`docker/docker-compose.example.yaml\`.
+          For Docker Compose, use \`docker/docker-compose.example.yaml\`.
 
           Or pull the image directly:
 
