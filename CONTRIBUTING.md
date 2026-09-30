@@ -87,7 +87,23 @@ frontend/
     main.tsx        # Entry point + providers
 nginx/              # nginx.conf (static SPA + /api reverse proxy)
 docker/             # Dockerfile, docker-compose.example.yaml, supervisord.conf
+scripts/            # Maintainer-only tooling (not baked into the Docker image)
 ```
+
+## Favicons
+
+Committed under `frontend/public/favicons/` (plus `favicon.ico` for crawlers).
+The SPA just picks the right file when the user changes theme/accent — no
+regeneration needed for that.
+
+Only re-run the generator if you edit the icon design or the accent colour
+list in code (`pip install pillow` first; Pillow is not a runtime dependency):
+
+```bash
+python scripts/generate_favicons.py
+```
+
+`scripts/` is maintainer tooling and is not included in the Docker image.
 
 ## Architecture
 
