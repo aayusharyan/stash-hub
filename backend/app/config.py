@@ -2,8 +2,6 @@
 # Everything the backend needs to reach Stash and to describe itself to the
 # frontend lives here, so no other module reads os.environ directly.
 
-import os
-import tempfile
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -27,17 +25,7 @@ class Settings(BaseSettings):
     http_max_connections: int = 200
     http_max_keepalive: int = 50
 
-    # Directory where the pre-rendered favicon PNGs are written at startup and
-    # served from. Empty means a per-user temp subdirectory chosen at runtime.
-    favicon_dir: str = ""
-
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-
-    # Resolves the favicon output directory, defaulting to a temp subdirectory when
-    # unset so the app works without any extra configuration.
-    @property
-    def favicon_path(self) -> str:
-        return self.favicon_dir or os.path.join(tempfile.gettempdir(), "stashhub-favicons")
 
     # Normalises the Stash base URL by stripping any trailing slash so path
     # joining never produces a double slash.
