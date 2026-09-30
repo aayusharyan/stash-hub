@@ -1,22 +1,8 @@
 # Docker Setup
 
-Run StashHub with Docker - no Node.js required.
+Run StashHub with Docker.
 
 ## Quick Start
-
-### Using Docker Compose (Recommended)
-
-```bash
-# Download the compose file
-curl -O https://raw.githubusercontent.com/aayusharyan/stash-hub/main/docker/docker-compose.yml
-
-# Set your Stash URL and (optionally) API key, then start
-STASH_INTERNAL_URL=http://your-stash-host:9999 STASH_API_KEY=your-key docker compose up -d
-```
-
-Access at: http://localhost:7676
-
-### Using Docker CLI
 
 ```bash
 docker run -d \
@@ -25,6 +11,20 @@ docker run -d \
   -e STASH_API_KEY=your-api-key \
   --name stash-hub \
   ghcr.io/aayusharyan/stash-hub:latest
+```
+
+Access at: http://localhost:7676
+
+## Docker Compose
+
+Download [`docker-compose.example.yaml`](docker-compose.example.yaml), save it as
+`docker-compose.yml`, then start it:
+
+```bash
+curl -o docker-compose.yml https://raw.githubusercontent.com/aayusharyan/stash-hub/main/docker/docker-compose.example.yaml
+
+# Set your Stash URL and (optionally) API key, then start
+STASH_INTERNAL_URL=http://your-stash-host:9999 STASH_API_KEY=your-key docker compose up -d
 ```
 
 ## Configuration
@@ -39,47 +39,64 @@ STASH_INTERNAL_URL=http://your-stash-host:9999
 STASH_API_KEY=
 
 # Optional: Browser-facing URL of your Stash instance. Used for the "Open Stash"
-# footer link and edit links on scene, performer, and studio detail pages.
-NEXT_PUBLIC_STASH_EXTERNAL_URL=http://your-stash-host:9999
+# footer link and edit links on scene, performer, studio, and tag detail pages.
+STASH_EXTERNAL_URL=http://your-stash-host:9999
 
 # Optional: number of items per page (default: 60)
-NEXT_PUBLIC_PAGE_SIZE=60
+PAGE_SIZE=60
 
 # Optional: port to expose StashHub on (default: 7676)
 STASH_HUB_PORT=7676
+
+# Optional: number of backend workers (default: 2x CPU cores)
+WEB_CONCURRENCY=
 ```
 
 Then run:
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d
+docker compose up -d
 ```
 
 ### Variable Reference
 
-| Variable                         | Description                                                                                                         | Default                 |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `STASH_INTERNAL_URL`             | Your Stash instance URL. Server-side only, never exposed to the browser.                                            | `http://localhost:9999` |
-| `STASH_API_KEY`                  | Stash API key. Server-side only, never exposed to the browser.                                                      | _(empty)_               |
-| `NEXT_PUBLIC_STASH_EXTERNAL_URL` | Browser-facing Stash URL. Powers the "Open Stash" footer link and edit links on scene, performer, and studio pages. | `http://localhost:9999` |
-| `NEXT_PUBLIC_PAGE_SIZE`          | Number of items per page in listing views.                                                                          | `60`                    |
-| `STASH_HUB_PORT`                 | Host port to expose StashHub on.                                                                                    | `7676`                  |
+| Variable             | Description                                                                                                          | Default                 |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `STASH_INTERNAL_URL` | URL the backend uses to reach Stash. Server-side only, never exposed to the browser.                                 | `http://localhost:9999` |
+| `STASH_API_KEY`      | Stash API key. Server-side only, never exposed to the browser.                                                       | _(empty)_               |
+| `STASH_EXTERNAL_URL` | Browser-facing Stash URL. Powers the "Open Stash" footer link and edit links on scene, performer, studio, tag pages. | `http://localhost:9999` |
+| `PAGE_SIZE`          | Number of items per page in listing views.                                                                           | `60`                    |
+| `WEB_CONCURRENCY`    | Number of Uvicorn backend workers.                                                                                   | `2 × CPU cores`         |
+| `STASH_HUB_PORT`     | Host port to expose StashHub on.                                                                                     | `7676`                  |
 
-> **How `NEXT_PUBLIC_*` vars work at runtime:** The pre-built image uses placeholder strings in the compiled bundle. The container's `entrypoint.sh` replaces them with your actual env var values on every startup - no image rebuild needed.
+> **How runtime config works:** all variables are read by the backend at container
+> startup. Browser-facing values (`STASH_EXTERNAL_URL`, `PAGE_SIZE`) are served to
+> the SPA via `/api/config`.
 
 ## Updating
 
-Pull the latest image and restart:
+```bash
+docker pull ghcr.io/aayusharyan/stash-hub:latest
+docker stop stash-hub && docker rm stash-hub
+```
+
+Then re-run the `docker run` command from Quick Start. If you use Docker Compose:
 
 ```bash
-docker compose -f docker/docker-compose.yml pull
-docker compose -f docker/docker-compose.yml up -d
+docker compose pull
+docker compose up -d
 ```
 
 ## Stopping
 
 ```bash
-docker compose -f docker/docker-compose.yml down
+docker stop stash-hub && docker rm stash-hub
+```
+
+Or, if you use Docker Compose:
+
+```bash
+docker compose down
 ```
 
 ## Pinning a Version
@@ -105,12 +122,16 @@ If you want to build from source:
 git clone https://github.com/aayusharyan/stash-hub.git
 cd stash-hub
 
-# Edit build args as needed
-docker compose up -d --build
+docker build -f docker/Dockerfile -t stash-hub .
+docker run -d -p 7676:7676 \
+  -e STASH_INTERNAL_URL=http://your-stash-host:9999 \
+  -e STASH_API_KEY=your-api-key \
+  --name stash-hub \
+  stash-hub
 ```
 
-The root `docker-compose.yml` builds from `docker/Dockerfile`. All `NEXT_PUBLIC_*` vars
-are resolved at startup via `entrypoint.sh`, so no special build args are needed.
+The image is built from `docker/Dockerfile` and serves the SPA via nginx +
+gunicorn. Configuration comes from environment variables at container start.
 
 ## Troubleshooting
 
@@ -138,4 +159,4 @@ docker inspect stash-hub --format='{{.State.Health.Status}}'
 ## Requirements
 
 - Docker 20.10+
-- Docker Compose v2+ (if using compose)
+- Docker Compose v2+ (only if you use Docker Compose)
