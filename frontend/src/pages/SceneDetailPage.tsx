@@ -86,19 +86,28 @@ function StarRating({
   const display = hovered ?? stars;
 
   return (
-    <div className="flex items-center gap-1" onMouseLeave={() => setHovered(null)}>
+    <div
+      className="flex items-center gap-1"
+      role="group"
+      aria-label="Rating"
+      onMouseLeave={() => setHovered(null)}
+    >
       {[1, 2, 3, 4, 5].map((star) => {
         const filled = star <= display;
         return (
           <button
             key={star}
+            type="button"
             disabled={disabled}
             onMouseEnter={() => setHovered(star)}
+            onFocus={() => setHovered(star)}
+            onBlur={() => setHovered(null)}
             onClick={() => {
               // Clicking the current rating clears it.
               onChange(star === stars ? 0 : star * 20);
             }}
             className="p-0.5 transition-transform hover:scale-110 disabled:cursor-not-allowed"
+            aria-label={star === stars ? "Clear rating" : `Rate ${star} star${star !== 1 ? "s" : ""}`}
             title={`Rate ${star} star${star !== 1 ? "s" : ""}`}
             style={{ color: "var(--text-muted)" }}
           >
@@ -306,7 +315,7 @@ export default function SceneDetailPage() {
   if (error || !scene) {
     return (
       <div className="flex flex-col items-center justify-center h-96" style={{ color: "var(--text-muted)" }}>
-        <p className="text-xl mb-2">Scene not found</p>
+        <h1 className="text-xl mb-2 font-normal">Scene not found</h1>
         <Link to="/" style={{ color: "var(--primary)" }}>← Back to home</Link>
       </div>
     );
@@ -328,13 +337,11 @@ export default function SceneDetailPage() {
           href={`${externalUrl}/scenes/${id}/edit`}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="Edit in Stash"
           title="Edit in Stash"
-          className="flex items-center justify-center rounded p-1 flex-shrink-0 mt-0.5 transition-colors"
-          style={{ color: "var(--text-muted)" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--primary)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+          className="flex items-center justify-center rounded p-1 flex-shrink-0 mt-0.5 transition-colors text-[var(--text-muted)] hover:text-[var(--primary)]"
         >
-          <Pencil size={15} />
+          <Pencil size={15} aria-hidden />
         </a>
       </div>
 
@@ -377,7 +384,7 @@ export default function SceneDetailPage() {
       <div className="flex flex-wrap gap-6">
         {scene.studio && (
           <div>
-            <p className="text-xs uppercase font-semibold mb-2" style={{ color: "var(--text-muted)" }}>Studio</p>
+            <h2 className="text-xs uppercase font-semibold mb-2" style={{ color: "var(--text-muted)" }}>Studio</h2>
             <StudioCredit
               key={scene.studio.id}
               id={scene.studio.id}
@@ -389,7 +396,7 @@ export default function SceneDetailPage() {
 
         {scene.performers?.length > 0 && (
           <div>
-            <p className="text-xs uppercase font-semibold mb-2" style={{ color: "var(--text-muted)" }}>Performers</p>
+            <h2 className="text-xs uppercase font-semibold mb-2" style={{ color: "var(--text-muted)" }}>Performers</h2>
             <div className="flex flex-wrap gap-3">
               {scene.performers.map((p) => (
                 <Link key={p.id} to={`/performers/${p.id}`} className="flex items-center gap-2 group">
@@ -416,7 +423,7 @@ export default function SceneDetailPage() {
       {/* Tags */}
       {scene.tags?.length > 0 && (
         <div className="mt-5">
-          <p className="text-xs uppercase font-semibold mb-2" style={{ color: "var(--text-muted)" }}>Tags</p>
+          <h2 className="text-xs uppercase font-semibold mb-2" style={{ color: "var(--text-muted)" }}>Tags</h2>
           <div className="flex flex-wrap gap-2">
             {scene.tags.map((tag) => <TagBadge key={tag.id} tag={tag} size="sm" />)}
           </div>
@@ -426,7 +433,7 @@ export default function SceneDetailPage() {
       {/* Description */}
       {scene.details && (
         <div className="mt-5">
-          <p className="text-xs uppercase font-semibold mb-2" style={{ color: "var(--text-muted)" }}>Description</p>
+          <h2 className="text-xs uppercase font-semibold mb-2" style={{ color: "var(--text-muted)" }}>Description</h2>
           <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
             {scene.details}
           </p>
@@ -493,6 +500,7 @@ export default function SceneDetailPage() {
       {hasMore && primaryParams && (
         <div className="mt-6 flex justify-center">
           <button
+            type="button"
             onClick={handleLoadMore}
             disabled={loadingMore}
             className="px-6 py-2 rounded text-sm font-semibold transition-all disabled:opacity-50"
