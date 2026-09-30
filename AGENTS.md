@@ -23,13 +23,15 @@ port 8000). Runtime config for the SPA comes from `GET /api/config`.
 ## Layout
 
 ```
-backend/app/          FastAPI app, stash_client, media proxy, routers
-backend/app/routers/  scenes, performers, studios, tags, search, stats, media, meta
-frontend/src/pages/   one component per screen
-frontend/src/lib/     api.ts (REST), queries.ts (TanStack Query hooks)
-frontend/src/App.tsx  React Router routes
-nginx/nginx.conf      static SPA + /api reverse proxy
-docker/               Dockerfile, docker-compose.example.yaml, supervisord
+backend/app/               FastAPI app, stash_client, media proxy, routers
+backend/app/routers/       scenes, performers, studios, tags, search, stats, media, meta
+frontend/src/pages/        one component per screen
+frontend/src/lib/          api.ts (REST), queries.ts (TanStack Query hooks)
+frontend/src/App.tsx       React Router routes
+nginx/nginx.conf           static SPA + /api reverse proxy
+docker/                    Dockerfile, docker-compose.example.yaml, supervisord
+scripts/                   maintainer tooling (favicon generator); not in the image
+frontend/public/favicons/  committed theme/accent PNGs served at /favicons/
 ```
 
 ## Conventions
@@ -45,6 +47,11 @@ docker/               Dockerfile, docker-compose.example.yaml, supervisord
   httpx client to HTTP/2).
 - Never leak `STASH_INTERNAL_URL` or `STASH_API_KEY` to the browser or into
   the Vite bundle.
+- Favicons are committed static files (`frontend/public/favicons/`, plus
+  `favicon.ico`). Theme/accent changes in the UI just load those files.
+  Re-run `python scripts/generate_favicons.py` only if you change the icon
+  design or accent colour list in code (needs Pillow). Do not generate
+  favicons in the backend or Docker image.
 - Version lives in `frontend/package.json`, `backend/pyproject.toml`, and the
   `LABEL version` in `docker/Dockerfile`. The release workflow bumps all three.
 - File-top comments describe what the file does; function comments go above
