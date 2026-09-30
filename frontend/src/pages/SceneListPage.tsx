@@ -71,7 +71,7 @@ export default function SceneListPage() {
         <div>
           <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Videos</h1>
           <CountLabel loading={isLoading}>
-            {total > 0 ? `${total.toLocaleString()} videos` : null}
+            {`${total.toLocaleString()} videos`}
           </CountLabel>
         </div>
         <SortSelect value={sortKey} options={SORT_OPTIONS} onChange={updateSort} label="Sort" />
