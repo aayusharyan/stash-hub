@@ -110,7 +110,7 @@ export default function SearchPage() {
             : "Search"}
         </h1>
         <CountLabel loading={isLoading}>
-          {total > 0 ? `${total.toLocaleString()} results` : null}
+          {`${total.toLocaleString()} results`}
         </CountLabel>
       </div>
 
@@ -121,6 +121,7 @@ export default function SearchPage() {
           {TYPE_OPTIONS.map(({ value, label }) => (
             <button
               key={value}
+              type="button"
               onClick={() => update("type", value)}
               className="px-4 py-1.5 text-sm font-semibold transition-colors"
               style={{
