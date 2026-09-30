@@ -89,7 +89,7 @@ export default function PerformerDetailPage() {
   if (!performer) {
     return (
       <div className="flex flex-col items-center justify-center h-96" style={{ color: "var(--text-muted)" }}>
-        <p className="text-xl mb-2">Performer not found</p>
+        <h1 className="text-xl mb-2 font-normal">Performer not found</h1>
         <Link to="/performers" style={{ color: "var(--primary)" }}>← Back to performers</Link>
       </div>
     );
@@ -160,13 +160,11 @@ export default function PerformerDetailPage() {
                   href={`${externalUrl}/performers/${id}/edit`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label="Edit in Stash"
                   title="Edit in Stash"
-                  className="flex items-center justify-center rounded p-1 transition-colors"
-                  style={{ color: "var(--text-muted)" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "var(--primary)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+                  className="flex items-center justify-center rounded p-1 transition-colors text-[var(--text-muted)] hover:text-[var(--primary)]"
                 >
-                  <Pencil size={16} />
+                  <Pencil size={16} aria-hidden />
                 </a>
               </div>
 
