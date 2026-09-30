@@ -42,7 +42,7 @@ jobs:
     steps:
       # Fetch full history so tag detection and changelog generation work correctly
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
