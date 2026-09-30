@@ -45,7 +45,7 @@ const DENSITY_LABELS: Record<GridDensity, string> = {
   5: "XS",
 };
 
-export function ThemeDropdown() {
+export function AppearanceMenu() {
   const { theme, accent, setTheme, setAccent } = useTheme();
   const { gridDensity, setGridDensity } = useView();
 
