@@ -2,7 +2,7 @@
 
 A sleek, modern frontend for [Stash](https://github.com/stashapp/stash) - the self-hosted media manager built for people who take their personal collection _very_ seriously.
 
-If you know what Stash is, you already know exactly what this is for. If you don't, it's a polished custom UI layer that sits on top of your Stash instance and gives your private library the dashboard it deserves.
+If you know what Stash is, you already know exactly what this is for. If you don't, it's a polished custom UI layer that sits on top of your Stash instance and gives your private library the UI it deserves.
 
 > Your collection. Your server. Your terms.
 
@@ -12,19 +12,13 @@ If you know what Stash is, you already know exactly what this is for. If you don
 - **Video Playback** - HLS streaming with scene markers, Cinema mode, and full keyboard shortcuts
 - **Performers** - Browse your entire roster with detailed profiles, stats, and filters
 - **Studios** - Everything organized by production house, exactly how you'd want it
-- **Tags** - Hierarchical tag browser with dedicated listing pages
+- **Tags** - Dedicated tag listing and detail pages
 - **Live Search** - Instant search across scenes, performers, studios, and tags simultaneously
 - **Watch History** - Your viewing history, always one click away
 - **Stats Dashboard** - At-a-glance totals for your full collection
 - **Themes** - Light, dark, and system mode with 6 accent color options
 
 ## Quick Start
-
-### Prerequisites
-
-- A running [Stash](https://github.com/stashapp/stash) instance
-- Docker (for running the app)
-- Node.js 18+ (only for local development)
 
 ### Docker (recommended)
 
@@ -38,63 +32,106 @@ docker run -d -p 7676:7676 \
 
 Access at http://localhost:7676
 
-See [docker/README.md](docker/README.md) for more options including Docker Compose.
+Requires a running [Stash](https://github.com/stashapp/stash) instance and Docker.
+See [docker/README.md](docker/README.md) for more options, including Docker Compose.
 
 ### Local Development
+
+Needs Node.js 20+, Python 3.12+, and a running Stash instance. The repo has a
+Python backend and a React SPA - run both in separate terminals; the frontend
+dev server proxies `/api` to the backend.
 
 ```bash
 git clone https://github.com/aayusharyan/stash-hub.git
 cd stash-hub
+cp .env.example .env   # edit with your Stash URL and API key
 
+# Terminal 1 - backend (FastAPI on :8000)
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+
+# Terminal 2 - frontend (Vite on :7676, proxies /api to :8000)
+cd frontend
 npm install
-cp .env.example .env.local
-# Edit .env.local with your Stash URL and API key
-
 npm run dev
 ```
 
 ## Configuration
 
-Copy `.env.example` to `.env.local` and fill in the values:
+All configuration is via environment variables (see `.env.example`). The backend
+reads them at startup and serves browser-facing values to the SPA through
+`/api/config`.
 
-| Variable                         | Description                                                                                                           | Default                 |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `STASH_INTERNAL_URL`             | Your Stash instance URL - server-side only, never sent to the browser                                                 | `http://localhost:9999` |
-| `STASH_API_KEY`                  | Stash API key from **Settings → Security → API Key**                                                                  | _(empty)_               |
-| `NEXT_PUBLIC_STASH_EXTERNAL_URL` | Browser-facing Stash URL - used for the "Open Stash" footer link and edit links on scene, performer, and studio pages | `http://localhost:9999` |
-| `NEXT_PUBLIC_PAGE_SIZE`          | Items per page across all listing views                                                                               | `60`                    |
+| Variable             | Description                                                                                             | Default                 |
+| -------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `STASH_INTERNAL_URL` | URL the **backend** uses to reach Stash (GraphQL + media). Server-side only, never sent to the browser. | `http://localhost:9999` |
+| `STASH_API_KEY`      | Stash API key from **Settings → Security → API Key** - server-side only                                 | _(empty)_               |
+| `STASH_EXTERNAL_URL` | URL the **browser** uses to open Stash. Powers the "Open Stash" footer link and edit deep-links only.   | `http://localhost:9999` |
+| `PAGE_SIZE`          | Items per page across all listing views                                                                 | `60`                    |
+| `WEB_CONCURRENCY`    | Number of Uvicorn backend workers                                                                       | `2 × CPU cores`         |
+| `STASH_HUB_PORT`     | Host port the container is published on                                                                 | `7676`                  |
 
-`STASH_INTERNAL_URL` and `STASH_API_KEY` are server-side proxy variables only - they are never included in the client bundle.
+These two Stash URLs are not interchangeable. The backend and the browser often
+cannot reach Stash on the same hostname:
+
+- **Locally** they can both be `http://localhost:9999`.
+- **Docker on the same machine as Stash:** internal is `http://host.docker.internal:9999` (`localhost` inside the container is the container, not Stash); external is `http://localhost:9999` (what you type in the browser).
+- **Compose / private network:** internal is a Docker DNS name like `http://stash:9999`; external is the LAN or public URL (`http://192.168.1.50:9999` or `https://stash.example.com`). The browser cannot resolve Compose service names.
+
+Playback, search, and every API call use `STASH_INTERNAL_URL` only.
+`STASH_EXTERNAL_URL` is solely for those "open / edit in Stash" links - if you
+point it at the internal URL, those links break for anyone outside Docker.
+
+`STASH_INTERNAL_URL` and `STASH_API_KEY` never leave the backend - only `/api/stash/*`
+media URLs and `STASH_EXTERNAL_URL` are exposed to the client.
 
 ## Architecture
 
-All requests go through StashHub's server - your browser never talks to Stash directly. Your Stash URL and API key stay on the server and are never exposed to the client.
+A decoupled stack: nginx serves the compiled React SPA and reverse-proxies `/api/*`
+to an async Python (FastAPI) backend. The backend wraps Stash's GraphQL behind a
+typed REST API and streams media in parallel. Your browser never talks to Stash
+directly, and the API key/internal URL stay on the server.
 
 ```
-Browser  →  /api/graphql   →  Stash GraphQL API
-         →  /api/stash/*   →  Stash media (images, streams, previews)
+Browser ─ static SPA ──────────▶ nginx :7676
+Browser ─ /api/* (REST + media) ▶ nginx ─▶ FastAPI :8000 ─┬─ POST /graphql  ─▶ Stash
+                                                          └─ GET media+Range ▶ Stash
 ```
+
+The media proxy uses a shared `httpx.AsyncClient` and streams with byte-range
+support, so many concurrent video/preview streams run in parallel across the async
+event loop and multiple gunicorn/Uvicorn workers.
 
 ## Tech Stack
 
-| Layer         | Tech                          |
-| ------------- | ----------------------------- |
-| Framework     | Next.js 16 + React 19         |
-| Data fetching | Apollo Client 4 (GraphQL)     |
-| Video player  | Vidstack (HLS + VTT previews) |
-| Styling       | Tailwind CSS 4 + shadcn/ui    |
-| State         | Zustand                       |
-| Language      | TypeScript throughout         |
+| Layer         | Tech                                          |
+| ------------- | --------------------------------------------- |
+| Backend       | FastAPI + gunicorn/Uvicorn (async Python)     |
+| Upstream I/O  | httpx (async GraphQL + streaming media proxy) |
+| Frontend      | Vite + React 19 + React Router v7             |
+| Data fetching | TanStack Query v5 over a typed REST client    |
+| Video player  | Vidstack (HLS + VTT previews)                 |
+| Styling       | Tailwind CSS 4 + shadcn/ui                    |
+| Serving       | nginx (static SPA + reverse proxy)            |
 
 ## Deployment
 
-The app ships as a Docker image built from `docker/Dockerfile` using a multi-stage build with `output: "standalone"` for a minimal image size. Releases are published automatically to [GitHub Container Registry](https://ghcr.io/aayusharyan/stash-hub) via the release workflow.
+The app ships as a single Docker image from `docker/Dockerfile` (nginx + gunicorn
+under supervisord). Releases go to
+[GitHub Container Registry](https://ghcr.io/aayusharyan/stash-hub).
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d
+docker run -d -p 7676:7676 \
+  -e STASH_INTERNAL_URL=http://your-stash-host:9999 \
+  -e STASH_API_KEY=your-api-key \
+  --name stash-hub \
+  ghcr.io/aayusharyan/stash-hub:latest
 ```
 
-For cloud deployments, any platform that runs Docker containers works. `NEXT_PUBLIC_*` variables must be set at **build time** (baked into the pre-built image with sensible defaults); `STASH_INTERNAL_URL` and `STASH_API_KEY` are injected at **runtime**.
+Any platform that runs Docker containers works. Configure via environment
+variables at container start. For Docker Compose, use
+[`docker/docker-compose.example.yaml`](docker/docker-compose.example.yaml).
 
 ## Contributing
 
