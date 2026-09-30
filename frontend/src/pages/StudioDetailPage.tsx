@@ -45,7 +45,7 @@ export default function StudioDetailPage() {
   if (!studio) {
     return (
       <div className="flex flex-col items-center justify-center h-96" style={{ color: "var(--text-muted)" }}>
-        <p className="text-xl mb-2">Studio not found</p>
+        <h1 className="text-xl mb-2 font-normal">Studio not found</h1>
         <Link to="/studios" style={{ color: "var(--primary)" }}>← Back to studios</Link>
       </div>
     );
@@ -99,13 +99,11 @@ export default function StudioDetailPage() {
                   href={`${externalUrl}/studios/${id}/edit`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label="Edit in Stash"
                   title="Edit in Stash"
-                  className="flex items-center justify-center rounded p-1 transition-colors"
-                  style={{ color: "var(--text-muted)" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "var(--primary)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+                  className="flex items-center justify-center rounded p-1 transition-colors text-[var(--text-muted)] hover:text-[var(--primary)]"
                 >
-                  <Pencil size={16} />
+                  <Pencil size={16} aria-hidden />
                 </a>
               </div>
 
@@ -165,9 +163,9 @@ export default function StudioDetailPage() {
         {/* Child studios */}
         {studio.child_studios?.length > 0 && (
           <section className="mb-8">
-            <h3 className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "var(--text-muted)" }}>
+            <h2 className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "var(--text-muted)" }}>
               Sub-Studios
-            </h3>
+            </h2>
             <div className="flex flex-wrap gap-2">
               {studio.child_studios.map((sub) => (
                 <Link
