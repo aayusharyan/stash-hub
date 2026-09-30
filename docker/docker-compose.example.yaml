@@ -1,0 +1,32 @@
+# Docker Compose file for running the pre-built image from GHCR.
+# Save it as docker-compose.yml and edit the environment values before starting.
+# The SPA reads externalUrl/pageSize from /api/config.
+#
+# Usage:  cp docker/docker-compose.example.yaml docker-compose.yml
+#         docker compose up -d
+# Access: http://localhost:7676
+
+services:
+  stash-hub:
+    image: ghcr.io/aayusharyan/stash-hub:latest
+    container_name: stash-hub
+    ports:
+      - "${STASH_HUB_PORT:-7676}:7676"
+    environment:
+      # Server-side only: used by the backend to reach Stash. Never sent to the browser.
+      STASH_INTERNAL_URL: ${STASH_INTERNAL_URL:-http://localhost:9999}
+      STASH_API_KEY: ${STASH_API_KEY:-}
+      # Browser-facing Stash URL, exposed via /api/config. Used for the "Open Stash"
+      # footer link and the edit deep-links on scene/performer/studio/tag pages.
+      STASH_EXTERNAL_URL: ${STASH_EXTERNAL_URL:-http://localhost:9999}
+      # Items per page across all listing views.
+      PAGE_SIZE: ${PAGE_SIZE:-60}
+      # Number of Uvicorn workers gunicorn spawns (defaults to 2x CPU cores if unset).
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:7676/api/config')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
