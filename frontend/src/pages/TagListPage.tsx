@@ -64,7 +64,7 @@ export default function TagListPage() {
         <div>
           <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Tags</h1>
           <CountLabel loading={isLoading}>
-            {total > 0 ? `${total.toLocaleString()} tags` : null}
+            {`${total.toLocaleString()} tags`}
           </CountLabel>
         </div>
         <SortSelect value={sortKey} options={SORT_OPTIONS} onChange={updateSort} label="Sort" />
