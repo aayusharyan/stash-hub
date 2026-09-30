@@ -3,6 +3,7 @@
 // React Query. Discover prioritises unwatched scenes and only backfills with
 // watched ones when there are not enough unwatched to fill the grid.
 
+import type { ElementType } from "react";
 import { Link } from "react-router-dom";
 import { TrendingUp, Shuffle, Star, Video, Users, Clapperboard, Tag, HardDrive, Timer } from "lucide-react";
 
@@ -15,7 +16,7 @@ import { usePerformers, useScenes, useStats, useTags } from "@/lib/queries";
 import { useDocumentTitle } from "@/lib/useDocumentTitle";
 
 // Reusable section header with an icon, title, and a "View All" link.
-function SectionHeader({ title, href, icon: Icon }: { title: string; href: string; icon: React.ElementType }) {
+function SectionHeader({ title, href, icon: Icon }: { title: string; href: string; icon: ElementType }) {
   return (
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
