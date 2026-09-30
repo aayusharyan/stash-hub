@@ -1,0 +1,77 @@
+# Weekly Dependabot version updates for every package ecosystem in this repo.
+# Minor/patch bumps are grouped into one PR per ecosystem; majors stay separate
+# (GitHub Actions is the exception: all of its updates share one PR).
+#
+# Backend pins live in backend/requirements.txt (what the Docker image installs);
+# pyproject.toml keeps looser ranges, which Dependabot leaves alone while the
+# latest release still satisfies them.
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - dependencies
+      - frontend
+    groups:
+      frontend:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - dependencies
+      - backend
+    groups:
+      backend:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - dependencies
+      - ci
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # Base images (node, python) are tied to the runtime the app is tested on, so
+  # major bumps are done by hand together with the matching code changes.
+  - package-ecosystem: docker
+    directory: /docker
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - dependencies
+      - docker
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
