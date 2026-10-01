@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Tag as TagIcon } from "lucide-react";
+import { Pencil, Tag as TagIcon } from "lucide-react";
 
 import { SceneGrid } from "@/components/scene/SceneGrid";
 import { CountSkeleton } from "@/components/ui/CountLabel";
@@ -15,7 +15,7 @@ import { useDocumentTitle } from "@/lib/useDocumentTitle";
 
 export default function TagDetailPage() {
   const { id = "" } = useParams();
-  const { pageSize } = useConfig();
+  const { externalUrl, pageSize } = useConfig();
   const [page, setPage] = useState(1);
   const [imgError, setImgError] = useState(false);
 
@@ -82,9 +82,22 @@ export default function TagDetailPage() {
             </div>
 
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl md:text-3xl font-bold" style={{ color: "var(--text-primary)" }}>
-                {tag.name}
-              </h1>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-2xl md:text-3xl font-bold" style={{ color: "var(--text-primary)" }}>
+                  {tag.name}
+                </h1>
+                {/* Opens the tag's edit form directly in Stash */}
+                <a
+                  href={`${externalUrl}/tags/${id}/edit`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Edit in Stash"
+                  title="Edit in Stash"
+                  className="flex items-center justify-center rounded p-1 transition-colors text-[var(--text-muted)] hover:text-[var(--primary)]"
+                >
+                  <Pencil size={16} aria-hidden />
+                </a>
+              </div>
               <div className="flex items-center gap-4 mt-1">
                 {scenesLoading ? (
                   <CountSkeleton />
