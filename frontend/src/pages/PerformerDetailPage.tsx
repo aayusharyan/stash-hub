@@ -156,16 +156,18 @@ export default function PerformerDetailPage() {
                 </h1>
                 {performer.favorite && <Heart size={20} fill="var(--primary)" color="var(--primary)" />}
                 {/* Opens the performer's edit form directly in Stash */}
-                <a
-                  href={`${externalUrl}/performers/${id}/edit`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Edit in Stash"
-                  title="Edit in Stash"
-                  className="flex items-center justify-center rounded p-1 transition-colors text-[var(--text-muted)] hover:text-[var(--primary)]"
-                >
-                  <Pencil size={16} aria-hidden />
-                </a>
+                {externalUrl && (
+                  <a
+                    href={`${externalUrl}/performers/${id}/edit`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Edit in Stash"
+                    title="Edit in Stash"
+                    className="flex items-center justify-center rounded p-1 transition-colors text-[var(--text-muted)] hover:text-[var(--primary)]"
+                  >
+                    <Pencil size={16} aria-hidden />
+                  </a>
+                )}
               </div>
 
               {performer.disambiguation && (
