@@ -33,26 +33,27 @@ npm run dev
 
 Read by the backend at runtime; browser-facing values reach the SPA via `/api/config`.
 
-| Variable             | Required | Description                                                                           |
-| -------------------- | -------- | ------------------------------------------------------------------------------------- |
-| `STASH_INTERNAL_URL` | Yes      | URL the **backend** uses to reach Stash (GraphQL + media). Server-side only.          |
-| `STASH_API_KEY`      | No       | Stash API key from **Settings → Security → API Key**. Server-side only.               |
-| `STASH_EXTERNAL_URL` | No       | URL the **browser** uses to open Stash - "Open Stash" footer link and edit links only |
-| `PAGE_SIZE`          | No       | Items per page across listing views (default: `60`)                                   |
-| `WEB_CONCURRENCY`    | No       | Number of Uvicorn backend workers (default: `2 × CPU cores`)                          |
+| Variable             | Required | Description                                                                                                  |
+| -------------------- | -------- | ------------------------------------------------------------------------------------------------------------ |
+| `STASH_INTERNAL_URL` | Yes      | URL the **backend** uses to reach Stash (GraphQL + media). Mirrored as `externalUrl` when EXTERNAL is unset. |
+| `STASH_API_KEY`      | No       | Stash API key from **Settings → Security → API Key**. Server-side only.                                      |
+| `STASH_EXTERNAL_URL` | No       | Browser URL for "Open Stash" / edit links. Unset → INTERNAL; empty → hide controls.                          |
+| `PAGE_SIZE`          | No       | Items per page across listing views (default: `60`)                                                          |
+| `WEB_CONCURRENCY`    | No       | Number of Uvicorn backend workers (default: `2 × CPU cores`)                                                 |
 
 These two Stash URLs are not interchangeable. The backend and the browser often
 cannot reach Stash on the same hostname:
 
-- **Locally** they can both be `http://localhost:9999`.
-- **Docker on the same machine as Stash:** internal is `http://host.docker.internal:9999` (`localhost` inside the container is the container, not Stash); external is `http://localhost:9999` (what you type in the browser).
-- **Compose / private network:** internal is a Docker DNS name like `http://stash:9999`; external is the LAN or public URL (`http://192.168.1.50:9999` or `https://stash.example.com`). The browser cannot resolve Compose service names.
+- **Locally** they can both be `http://localhost:9999` (omit EXTERNAL to reuse INTERNAL).
+- **Docker on the same machine as Stash:** internal is `http://host.docker.internal:9999` (`localhost` inside the container is the container, not Stash); set external to `http://localhost:9999` (what you type in the browser).
+- **Compose / private network:** internal is a Docker DNS name like `http://stash:9999`; set external to the LAN or public URL (`http://192.168.1.50:9999` or `https://stash.example.com`). The browser cannot resolve Compose service names.
 
 Playback, search, and every API call use `STASH_INTERNAL_URL` only.
-`STASH_EXTERNAL_URL` is solely for those "open / edit in Stash" links - if you
-point it at the internal URL, those links break for anyone outside Docker.
+`STASH_EXTERNAL_URL` is solely for those "open / edit in Stash" links — omit it to
+reuse INTERNAL, set it when the browser cannot reach that hostname, or set it empty
+to hide the controls.
 
-`STASH_INTERNAL_URL` and `STASH_API_KEY` never reach the browser.
+`STASH_API_KEY` never reaches the browser.
 
 ## Tech Stack
 
