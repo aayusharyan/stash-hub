@@ -1,17 +1,9 @@
-# =============================================================================
-# @file release.yml
-# @description Automated release workflow with Docker image publishing to GHCR.
+# Manual release workflow: bumps semver, tags, builds native amd64+arm64
+# images, merges them into one GHCR multi-arch manifest, and creates a
+# GitHub Release. Triggered from Actions → Create Release.
 #
-# Triggered manually from the Actions tab. Calculates the next semver from the
-# latest git tag, bumps the version in frontend/package.json, backend/pyproject.toml
-# and docker/Dockerfile, commits & tags, builds a multi-platform Docker image,
-# pushes to GHCR, and creates a GitHub Release with auto-generated changelog.
-#
-# Usage: Actions tab → Create Release → Run workflow → Select version bump type
-#
-# Flow:
-# Calculate version → Update files → Commit → Tag → Build Docker → Release
-# =============================================================================
+# Flow: prepare (version/tag/notes) → build matrix (native per-arch,
+# push-by-digest) → merge (imagetools + release).
 
 name: Create Release
 
@@ -19,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       version_bump:
-        description: 'Version bump type'
+        description: "Version bump type"
         required: true
         type: choice
         options:
@@ -32,21 +24,27 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  release:
+  # Bumps version files, commits, tags, and uploads release notes for merge.
+  prepare:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write   # for commits, tags, and releases
-      packages: write   # for pushing Docker images to GHCR
+      contents: write
+
+    outputs:
+      new_version: ${{ steps.version.outputs.new_version }}
+      version_number: ${{ steps.version.outputs.version_number }}
+      major_minor: ${{ steps.version.outputs.major_minor }}
+      major: ${{ steps.version.outputs.major }}
 
     steps:
-      # Fetch full history so tag detection and changelog generation work correctly
+      # Full history needed for tag detection and changelog generation.
       - name: Checkout code
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      # Reads the latest vX.Y.Z tag and bumps major or minor, resetting lower components
+      # Reads latest vX.Y.Z and bumps major or minor, resetting lower parts.
       - name: Calculate new version
         id: version
         run: |
@@ -78,8 +76,7 @@ jobs:
           echo "major_minor=${MAJOR}.${MINOR}" >> $GITHUB_OUTPUT
           echo "major=${MAJOR}" >> $GITHUB_OUTPUT
 
-      # Bumps version in frontend/package.json (jq), backend/pyproject.toml (sed),
-      # and the LABEL in docker/Dockerfile (sed).
+      # Bumps frontend/package.json, backend/pyproject.toml, and Dockerfile LABEL.
       - name: Update version in codebase
         run: |
           jq '.version = "${{ steps.version.outputs.version_number }}"' frontend/package.json > frontend/package.json.tmp
@@ -98,7 +95,7 @@ jobs:
           echo "Updated version in docker/Dockerfile:"
           grep 'LABEL version=' docker/Dockerfile
 
-      # Skips commit gracefully if files were already at the target version (no-op update)
+      # No-op if files were already at the target version.
       - name: Commit and push version bump
         run: |
           git config user.name "Aayush Sinha"
@@ -118,9 +115,8 @@ jobs:
           git tag -a ${{ steps.version.outputs.new_version }} -m "Release ${{ steps.version.outputs.new_version }}"
           git push origin ${{ steps.version.outputs.new_version }}
 
-      # Collects all commits since the previous tag for the release notes body
+      # Commits since the previous tag become the release notes body.
       - name: Generate changelog
-        id: changelog
         run: |
           PREV_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n 2 | head -n 1)
 
@@ -158,9 +154,38 @@ jobs:
 
           echo "Release notes generated"
 
-      # Sets up QEMU and Buildx for multi-platform image builds (amd64 + arm64)
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: RELEASE_NOTES.md
+          retention-days: 1
+
+  # Builds one platform natively per runner and pushes by digest only.
+  build:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            pair: amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            pair: arm64
+    runs-on: ${{ matrix.runner }}
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      # Checkout the tag so the image includes the bumped version LABEL.
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.new_version }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -172,7 +197,76 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Generates Docker tags: latest, vX.Y.Z, vX.Y, vX
+      # Labels only; tags are applied later when digests are merged.
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      # Single-platform native build; digest artifact is consumed by merge.
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+
+      # Stores digest as an empty filename for the merge job to discover.
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.pair }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Combines per-arch digests into tagged multi-arch manifests and publishes the release.
+  merge:
+    needs:
+      - prepare
+      - build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Download release notes
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Same public tags as before: latest, vX.Y.Z, vX.Y, vX.
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v6
@@ -180,28 +274,23 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ steps.version.outputs.new_version }}
-            type=raw,value=v${{ steps.version.outputs.major_minor }}
-            type=raw,value=v${{ steps.version.outputs.major }}
+            type=raw,value=${{ needs.prepare.outputs.new_version }}
+            type=raw,value=v${{ needs.prepare.outputs.major_minor }}
+            type=raw,value=v${{ needs.prepare.outputs.major }}
 
-      # Builds and pushes the Docker image to GHCR for both amd64 and arm64
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: docker/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      # Creates one multi-arch manifest listing both native digests under those tags.
+      - name: Create multi-arch manifest
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ steps.version.outputs.new_version }}
-          name: ${{ steps.version.outputs.new_version }}
+          tag_name: ${{ needs.prepare.outputs.new_version }}
+          name: ${{ needs.prepare.outputs.new_version }}
           body_path: RELEASE_NOTES.md
           draft: false
           prerelease: false
