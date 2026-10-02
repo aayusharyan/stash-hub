@@ -63,35 +63,36 @@ All configuration is via environment variables (see `.env.example`). The backend
 reads them at startup and serves browser-facing values to the SPA through
 `/api/config`.
 
-| Variable             | Description                                                                                             | Default                 |
-| -------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `STASH_INTERNAL_URL` | URL the **backend** uses to reach Stash (GraphQL + media). Server-side only, never sent to the browser. | `http://localhost:9999` |
-| `STASH_API_KEY`      | Stash API key from **Settings → Security → API Key** - server-side only                                 | _(empty)_               |
-| `STASH_EXTERNAL_URL` | URL the **browser** uses to open Stash. Powers the "Open Stash" footer link and edit deep-links only.   | `http://localhost:9999` |
-| `PAGE_SIZE`          | Items per page across all listing views                                                                 | `60`                    |
-| `WEB_CONCURRENCY`    | Number of Uvicorn backend workers                                                                       | `2 × CPU cores`         |
-| `STASH_HUB_PORT`     | Host port the container is published on                                                                 | `7676`                  |
+| Variable             | Description                                                                                                       | Default                 |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `STASH_INTERNAL_URL` | URL the **backend** uses to reach Stash (GraphQL + media). Mirrored as `externalUrl` only when EXTERNAL is unset. | `http://localhost:9999` |
+| `STASH_API_KEY`      | Stash API key from **Settings → Security → API Key** - server-side only                                           | _(empty)_               |
+| `STASH_EXTERNAL_URL` | Browser URL for "Open Stash" / edit links. Unset → same as INTERNAL; empty → hide those controls.                 | _(unset → INTERNAL)_    |
+| `PAGE_SIZE`          | Items per page across all listing views                                                                           | `60`                    |
+| `WEB_CONCURRENCY`    | Number of Uvicorn backend workers                                                                                 | `2 × CPU cores`         |
+| `STASH_HUB_PORT`     | Host port the container is published on                                                                           | `7676`                  |
 
 These two Stash URLs are not interchangeable. The backend and the browser often
 cannot reach Stash on the same hostname:
 
-- **Locally** they can both be `http://localhost:9999`.
-- **Docker on the same machine as Stash:** internal is `http://host.docker.internal:9999` (`localhost` inside the container is the container, not Stash); external is `http://localhost:9999` (what you type in the browser).
-- **Compose / private network:** internal is a Docker DNS name like `http://stash:9999`; external is the LAN or public URL (`http://192.168.1.50:9999` or `https://stash.example.com`). The browser cannot resolve Compose service names.
+- **Locally** they can both be `http://localhost:9999` (omit EXTERNAL to reuse INTERNAL).
+- **Docker on the same machine as Stash:** internal is `http://host.docker.internal:9999` (`localhost` inside the container is the container, not Stash); set external to `http://localhost:9999` (what you type in the browser).
+- **Compose / private network:** internal is a Docker DNS name like `http://stash:9999`; set external to the LAN or public URL (`http://192.168.1.50:9999` or `https://stash.example.com`). The browser cannot resolve Compose service names.
 
 Playback, search, and every API call use `STASH_INTERNAL_URL` only.
-`STASH_EXTERNAL_URL` is solely for those "open / edit in Stash" links - if you
-point it at the internal URL, those links break for anyone outside Docker.
+`STASH_EXTERNAL_URL` is solely for those "open / edit in Stash" links — omit it to
+reuse INTERNAL, set it when the browser cannot reach that hostname, or set it empty
+to hide the controls.
 
-`STASH_INTERNAL_URL` and `STASH_API_KEY` never leave the backend - only `/api/stash/*`
-media URLs and `STASH_EXTERNAL_URL` are exposed to the client.
+`STASH_API_KEY` never leaves the backend. Only `/api/stash/*` media URLs and the
+resolved `externalUrl` / `pageSize` from `/api/config` are exposed to the client.
 
 ## Architecture
 
 A decoupled stack: nginx serves the compiled React SPA and reverse-proxies `/api/*`
 to an async Python (FastAPI) backend. The backend wraps Stash's GraphQL behind a
 typed REST API and streams media in parallel. Your browser never talks to Stash
-directly, and the API key/internal URL stay on the server.
+directly, and the API key stays on the server.
 
 ```
 Browser ─ static SPA ──────────▶ nginx :7676
