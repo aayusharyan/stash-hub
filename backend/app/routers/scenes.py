@@ -86,11 +86,6 @@ async def list_scenes(
 ) -> dict[str, Any]:
     per_page = per_page or get_settings().page_size
 
-    # Stash sorts scenes by "rating"; "rating100" is only valid as a filter field.
-    # Accept it as an alias so older bookmarked URLs don't 502 on an invalid sort.
-    if sort == "rating100":
-        sort = "rating"
-
     flt: dict[str, Any] = {"page": page, "per_page": per_page, "sort": sort, "direction": dir}
     if q:
         flt["q"] = q
