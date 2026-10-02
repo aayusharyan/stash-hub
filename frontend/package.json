@@ -1,6 +1,6 @@
 {
   "name": "stash-hub-frontend",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "private": true,
   "type": "module",
   "description": "Vite + React single-page frontend for StashHub, served statically by nginx and backed by the Python REST API.",
