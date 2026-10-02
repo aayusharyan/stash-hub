@@ -38,9 +38,10 @@ STASH_INTERNAL_URL=http://your-stash-host:9999
 # Optional: API key from Stash → Settings → Security → API Key
 STASH_API_KEY=
 
-# Optional: Browser-facing URL of your Stash instance. Used for the "Open Stash"
-# footer link and edit links on scene, performer, studio, and tag detail pages.
-STASH_EXTERNAL_URL=http://your-stash-host:9999
+# Optional: browser-facing Stash URL for "Open Stash" / edit links.
+# Omit to reuse STASH_INTERNAL_URL. Set empty to hide those controls.
+# Set when the browser cannot reach the INTERNAL hostname.
+# STASH_EXTERNAL_URL=http://your-stash-host:9999
 
 # Optional: number of items per page (default: 60)
 PAGE_SIZE=60
@@ -60,17 +61,17 @@ docker compose up -d
 
 ### Variable Reference
 
-| Variable             | Description                                                                                                          | Default                 |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `STASH_INTERNAL_URL` | URL the backend uses to reach Stash. Server-side only, never exposed to the browser.                                 | `http://localhost:9999` |
-| `STASH_API_KEY`      | Stash API key. Server-side only, never exposed to the browser.                                                       | _(empty)_               |
-| `STASH_EXTERNAL_URL` | Browser-facing Stash URL. Powers the "Open Stash" footer link and edit links on scene, performer, studio, tag pages. | `http://localhost:9999` |
-| `PAGE_SIZE`          | Number of items per page in listing views.                                                                           | `60`                    |
-| `WEB_CONCURRENCY`    | Number of Uvicorn backend workers.                                                                                   | `2 × CPU cores`         |
-| `STASH_HUB_PORT`     | Host port to expose StashHub on.                                                                                     | `7676`                  |
+| Variable             | Description                                                                                              | Default                 |
+| -------------------- | -------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `STASH_INTERNAL_URL` | URL the backend uses to reach Stash (GraphQL + media). Mirrored as `externalUrl` when EXTERNAL is unset. | `http://localhost:9999` |
+| `STASH_API_KEY`      | Stash API key. Server-side only, never exposed to the browser.                                           | _(empty)_               |
+| `STASH_EXTERNAL_URL` | Browser URL for "Open Stash" / edit links. Unset → INTERNAL; empty → hide those controls.                | _(unset → INTERNAL)_    |
+| `PAGE_SIZE`          | Number of items per page in listing views.                                                               | `60`                    |
+| `WEB_CONCURRENCY`    | Number of Uvicorn backend workers.                                                                       | `2 × CPU cores`         |
+| `STASH_HUB_PORT`     | Host port to expose StashHub on.                                                                         | `7676`                  |
 
 > **How runtime config works:** all variables are read by the backend at container
-> startup. Browser-facing values (`STASH_EXTERNAL_URL`, `PAGE_SIZE`) are served to
+> startup. Browser-facing values (resolved `externalUrl`, `PAGE_SIZE`) are served to
 > the SPA via `/api/config`.
 
 ## Updating
