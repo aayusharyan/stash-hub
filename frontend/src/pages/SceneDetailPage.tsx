@@ -333,16 +333,18 @@ export default function SceneDetailPage() {
           {scene.title || `Scene ${scene.id}`}
         </h1>
         {/* Opens the scene's edit form directly in Stash */}
-        <a
-          href={`${externalUrl}/scenes/${id}/edit`}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Edit in Stash"
-          title="Edit in Stash"
-          className="flex items-center justify-center rounded p-1 flex-shrink-0 mt-0.5 transition-colors text-[var(--text-muted)] hover:text-[var(--primary)]"
-        >
-          <Pencil size={15} aria-hidden />
-        </a>
+        {externalUrl && (
+          <a
+            href={`${externalUrl}/scenes/${id}/edit`}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Edit in Stash"
+            title="Edit in Stash"
+            className="flex items-center justify-center rounded p-1 flex-shrink-0 mt-0.5 transition-colors text-[var(--text-muted)] hover:text-[var(--primary)]"
+          >
+            <Pencil size={15} aria-hidden />
+          </a>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-3 mt-2">
