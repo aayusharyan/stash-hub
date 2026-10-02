@@ -59,8 +59,6 @@ updates:
         patterns:
           - "*"
 
-  # Base images (node, python) are tied to the runtime the app is tested on, so
-  # major bumps are done by hand together with the matching code changes.
   - package-ecosystem: docker
     directory: /docker
     schedule:
@@ -71,7 +69,10 @@ updates:
     labels:
       - dependencies
       - docker
-    ignore:
-      - dependency-name: "*"
+    groups:
+      docker:
+        patterns:
+          - "*"
         update-types:
-          - version-update:semver-major
+          - minor
+          - patch
