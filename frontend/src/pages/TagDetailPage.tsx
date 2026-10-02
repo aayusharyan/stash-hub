@@ -87,16 +87,18 @@ export default function TagDetailPage() {
                   {tag.name}
                 </h1>
                 {/* Opens the tag's edit form directly in Stash */}
-                <a
-                  href={`${externalUrl}/tags/${id}/edit`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Edit in Stash"
-                  title="Edit in Stash"
-                  className="flex items-center justify-center rounded p-1 transition-colors text-[var(--text-muted)] hover:text-[var(--primary)]"
-                >
-                  <Pencil size={16} aria-hidden />
-                </a>
+                {externalUrl && (
+                  <a
+                    href={`${externalUrl}/tags/${id}/edit`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Edit in Stash"
+                    title="Edit in Stash"
+                    className="flex items-center justify-center rounded p-1 transition-colors text-[var(--text-muted)] hover:text-[var(--primary)]"
+                  >
+                    <Pencil size={16} aria-hidden />
+                  </a>
+                )}
               </div>
               <div className="flex items-center gap-4 mt-1">
                 {scenesLoading ? (
