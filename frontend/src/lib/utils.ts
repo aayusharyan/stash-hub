@@ -104,11 +104,6 @@ export function formatViews(count?: number): string {
   return `${count} views`;
 }
 
-// Converts a Stash 0-100 rating to a percentage integer (used for rating bars).
-export function ratingToPercent(rating100?: number): number {
-  return rating100 ? Math.round(rating100) : 0;
-}
-
 // Rewrites a full media URL to a local proxy path, keeping only path + query.
 // The backend already proxies most URLs, so this mainly guards any that arrive
 // absolute and normalises them to same-origin /api/stash paths.
@@ -126,26 +121,6 @@ export function toProxyUrl(stashMediaUrl: string | null | undefined): string | n
 // Constructs the proxy URL for the direct video stream of a scene by ID.
 export function sceneStreamUrl(id: string): string {
   return `/api/stash/scene/${id}/stream`;
-}
-
-// Constructs the proxy URL for the screenshot (thumbnail) of a scene by ID.
-export function sceneScreenshotUrl(id: string): string {
-  return `/api/stash/scene/${id}/screenshot`;
-}
-
-// Constructs the proxy URL for a performer's profile image by ID.
-export function performerImageUrl(id: string): string {
-  return `/api/stash/performer/${id}/image`;
-}
-
-// Constructs the proxy URL for a studio's logo image by ID.
-export function studioImageUrl(id: string): string {
-  return `/api/stash/studio/${id}/image`;
-}
-
-// Constructs the proxy URL for a tag's cover image by ID.
-export function tagImageUrl(id: string): string {
-  return `/api/stash/tag/${id}/image`;
 }
 
 // Maps pixel height to a common resolution label (4K, QHD, HD, 720p, 480p, or "NNNp").
