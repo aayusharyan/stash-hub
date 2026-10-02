@@ -4,7 +4,7 @@ PRs are welcome. This doc covers everything you need to get up and running and t
 
 ## Prerequisites
 
-- Node.js 20+ (frontend)
+- Node.js 24+ (frontend)
 - Python 3.12+ (backend)
 - A running [Stash](https://github.com/stashapp/stash) instance to develop against
 
