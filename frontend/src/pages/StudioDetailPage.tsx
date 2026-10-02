@@ -95,16 +95,18 @@ export default function StudioDetailPage() {
                   {studio.name}
                 </h1>
                 {/* Opens the studio's edit form directly in Stash */}
-                <a
-                  href={`${externalUrl}/studios/${id}/edit`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Edit in Stash"
-                  title="Edit in Stash"
-                  className="flex items-center justify-center rounded p-1 transition-colors text-[var(--text-muted)] hover:text-[var(--primary)]"
-                >
-                  <Pencil size={16} aria-hidden />
-                </a>
+                {externalUrl && (
+                  <a
+                    href={`${externalUrl}/studios/${id}/edit`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Edit in Stash"
+                    title="Edit in Stash"
+                    className="flex items-center justify-center rounded p-1 transition-colors text-[var(--text-muted)] hover:text-[var(--primary)]"
+                  >
+                    <Pencil size={16} aria-hidden />
+                  </a>
+                )}
               </div>
 
               {studio.aliases?.length > 0 && (
