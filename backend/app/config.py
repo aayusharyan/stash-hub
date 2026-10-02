@@ -10,14 +10,15 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Environment-backed settings container.
 
-    STASH_INTERNAL_URL / STASH_API_KEY are secrets used only server-side to talk
-    to Stash. STASH_EXTERNAL_URL and PAGE_SIZE are safe to expose to the browser
-    and are served through the /api/config endpoint.
+    STASH_INTERNAL_URL / STASH_API_KEY are used server-side to talk to Stash.
+    STASH_EXTERNAL_URL (when set) and PAGE_SIZE are served through /api/config.
+    EXTERNAL unset means open/edit links use the internal URL; an empty string
+    means those controls are hidden in the SPA.
     """
 
     stash_internal_url: str = "http://localhost:9999"
     stash_api_key: str = ""
-    stash_external_url: str = "http://localhost:9999"
+    stash_external_url: str | None = None
     page_size: int = 60
 
     # Upper bounds for the shared httpx connection pool. Sized generously so many
