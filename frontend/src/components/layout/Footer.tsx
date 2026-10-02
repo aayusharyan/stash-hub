@@ -1,5 +1,6 @@
 // Renders the global site footer shown at the bottom of every page.
-// Three-column layout: Open Stash link (left), site name (center), GitHub star link (right).
+// Three-column layout: Open Stash link (left, omitted when externalUrl is empty),
+// site name (center), GitHub star link (right).
 // On mobile, pb-14 ensures content clears the fixed MobileNav (56px tall).
 
 import { ExternalLink, Star } from "lucide-react";
@@ -16,15 +17,19 @@ export function Footer() {
     >
       <Container>
         <div className="grid grid-cols-3 items-center py-2">
-          <a
-            href={externalUrl || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Open Stash <ExternalLink size={12} />
-          </a>
+          <div>
+            {externalUrl && (
+              <a
+                href={externalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs"
+                style={{ color: "var(--text-muted)" }}
+              >
+                Open Stash <ExternalLink size={12} />
+              </a>
+            )}
+          </div>
 
           <span className="text-xs text-center font-semibold" style={{ color: "var(--text-muted)" }}>
             StashHub
