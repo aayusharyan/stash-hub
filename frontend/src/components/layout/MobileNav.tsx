@@ -4,7 +4,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Home, Film, Users, Clapperboard, History } from "lucide-react";
 
-// Shows the 5 most essential nav items; Tags dropped in favour of History on mobile.
 const NAV = [
   { href: "/", label: "Home", icon: Home },
   { href: "/scenes", label: "Videos", icon: Film },
