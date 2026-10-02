@@ -37,7 +37,7 @@ See [docker/README.md](docker/README.md) for more options, including Docker Comp
 
 ### Local Development
 
-Needs Node.js 20+, Python 3.12+, and a running Stash instance. The repo has a
+Needs Node.js 24+, Python 3.12+, and a running Stash instance. The repo has a
 Python backend and a React SPA - run both in separate terminals; the frontend
 dev server proxies `/api` to the backend.
 
