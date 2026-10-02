@@ -13,12 +13,13 @@ services:
     ports:
       - "${STASH_HUB_PORT:-7676}:7676"
     environment:
-      # Server-side only: used by the backend to reach Stash. Never sent to the browser.
+      # Backend URL for Stash GraphQL/media. Also used for open/edit links when
+      # STASH_EXTERNAL_URL is omitted.
       STASH_INTERNAL_URL: ${STASH_INTERNAL_URL:-http://localhost:9999}
       STASH_API_KEY: ${STASH_API_KEY:-}
-      # Browser-facing Stash URL, exposed via /api/config. Used for the "Open Stash"
-      # footer link and the edit deep-links on scene/performer/studio/tag pages.
-      STASH_EXTERNAL_URL: ${STASH_EXTERNAL_URL:-http://localhost:9999}
+      # Optional browser-facing Stash URL for "Open Stash" / edit links.
+      # Omit to fall back to STASH_INTERNAL_URL; set to empty to hide those controls.
+      # STASH_EXTERNAL_URL: ${STASH_EXTERNAL_URL}
       # Items per page across all listing views.
       PAGE_SIZE: ${PAGE_SIZE:-60}
       # Number of Uvicorn workers gunicorn spawns (defaults to 2x CPU cores if unset).
