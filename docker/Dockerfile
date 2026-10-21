@@ -17,7 +17,7 @@ RUN npm ci
 COPY frontend/ ./
 RUN npm run build
 
-FROM python:3.14-slim AS runtime
+FROM python:3.15-slim AS runtime
 WORKDIR /app
 
 LABEL org.opencontainers.image.source="https://github.com/aayusharyan/stash-hub"
